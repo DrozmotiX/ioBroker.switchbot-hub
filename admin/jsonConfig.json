@@ -1,0 +1,28 @@
+{
+  "type": "panel",
+  "i18n": true,
+  "items": {
+    "_basicSettings": {
+      "newLine": true,
+      "type": "header",
+      "text": "Please provide your open token",
+      "sm": 12
+    },
+    "openToken": {
+      "newLine": true,
+      "repeat": false,
+      "visible": false,
+      "type": "password",
+      "label": "Generate an Open Token within the app",
+      "sm": 11
+    },
+    "intervall": {
+      "sm": 1,
+      "type": "number",
+      "label": "Refresh interval in minutes",
+      "min" : 1,
+      "max" : 1380,
+      "step": 1
+    }
+  }
+}
