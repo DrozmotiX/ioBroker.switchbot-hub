@@ -5,6 +5,9 @@ nbproject/
 Thumbs.db
 gulpfile.js
 
+*.DS_Store
+.create-adapter.json
+
 # CI test files
 test/
 travis/

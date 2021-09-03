@@ -94,7 +94,7 @@ class SwitchbotHub extends utils.Adapter {
 		}
 		dataRefreshTimer[deviceId] = setTimeout(async () => {
 
-			if (deviceId != 'all') { // Only refresh values of device
+			if (deviceId !== 'all') { // Only refresh values of device
 
 				await this.deviceStatus(deviceId);
 
@@ -236,7 +236,7 @@ class SwitchbotHub extends utils.Adapter {
 					}
 
 					// Request device values
-					this.log.debug(`[deviceStatus for ]: ${JSON.stringify(this.devices[device])}`);
+					this.log.debug(`[deviceStatus for ]: ${JSON.stringify(this.devices[deviceArray[device].deviceId].deviceName)}`);
 					await this.deviceStatus(deviceArray[device].deviceId);
 
 					// Define intervall time (only if device has states)
@@ -263,7 +263,7 @@ class SwitchbotHub extends utils.Adapter {
 			this.log.info(`Connected to SwitchBot API found ${deviceList.length} devices`);
 
 			try {
-				if (deviceList != null) {
+				if (deviceList) {
 					await arrayHandler(deviceList);
 				} else {
 					this.log.error(`Can not handle device list from SwitchBot API`);
@@ -487,10 +487,10 @@ class SwitchbotHub extends utils.Adapter {
 			try {
 				this.log.debug(`[sendState] ${JSON.stringify(this.devices[deviceId])}: ${JSON.stringify(apiData)}`);
 				const apiResponse = await this.apiCall(`${apiURL}`, `${JSON.stringify(apiData)}`);
-				this.log.debug(`[sendState apiResponse]: ${JSON.stringify(this.devices[apiResponse])}`);
+				this.log.debug(`[sendState apiResponse]: ${JSON.stringify(apiResponse)}`);
 
 				// Set ACK to true if API post  command successfully
-				if (apiResponse.statusCode == '100') {
+				if (apiResponse.statusCode === 100) {
 					this.setState(id, {ack: true});
 				} else {
 					this.log.error(`Unable to send command : ${apiResponse.message}`);
