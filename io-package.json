@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "switchbot-hub",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "news": {
+            "0.1.1": {
+                "en": "Support for IR remote of type Air Conditioner added",
+                "de": "Unterstützung für IR-Fernbedienung vom Typ Klimaanlage hinzugefügt",
+                "ru": "Добавлена поддержка ИК-пульта типа Air Conditioner.",
+                "pt": "Suporte para controle remoto IR do tipo de ar condicionado adicionado",
+                "nl": "Ondersteuning voor IR-afstandsbediening van het type Airconditioner toegevoegd",
+                "fr": "Prise en charge de la télécommande IR de type Climatiseur ajoutée",
+                "it": "Aggiunto supporto per telecomando IR di tipo condizionatore d'aria",
+                "es": "Se agregó soporte para control remoto IR de tipo aire acondicionado",
+                "pl": "Dodano obsługę pilota na podczerwień typu Klimatyzator",
+                "zh-cn": "添加了对空调类型的红外遥控器的支持"
+            },
             "0.1.0": {
                 "en": "* Initial alpha release, Physical devices implemented\n* Only curtains and SwitchBots can be controlled currently\n\n## License\nMIT License\n\nCopyright (c) 2021 DutchmanNL <oss@drozmotix.eu>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.",
                 "de": "* Erste Alpha-Version, physische Geräte implementiert\n* Derzeit können nur Vorhänge und SwitchBots gesteuert werden\n\n## Lizenz\nMIT-Lizenz\n\nCopyright (c) 2021 DutchmanNL <oss@drozmotix.eu>\n\nDie Erlaubnis wird hiermit jeder Person, die eine Kopie erhält, kostenlos erteilt\ndieser Software und der zugehörigen Dokumentationsdateien (die \"Software\"), um\nan der Software uneingeschränkt, einschließlich und ohne Einschränkung der Rechte\nzu verwenden, kopieren, modifizieren, zusammenführen, veröffentlichen, verteilen, unterlizenzieren und/oder verkaufen\nKopien der Software zu erstellen und Personen, denen die Software zur Verfügung steht,\ndazu unter folgenden Bedingungen bereitgestellt:\n\nDer obige Urheberrechtshinweis und dieser Erlaubnishinweis müssen in allen enthalten sein\nKopien oder wesentliche Teile der Software.\n\nDIE SOFTWARE WIRD \"WIE BESEHEN\", OHNE JEGLICHE GEWÄHRLEISTUNG, AUSDRÜCKLICH ODER\nSTILLSCHWEIGEND, EINSCHLIESSLICH, ABER NICHT BESCHRÄNKT AUF DIE GARANTIEN DER MARKTGÄNGIGKEIT,\nEIGNUNG FÜR EINEN BESTIMMTEN ZWECK UND NICHTVERLETZUNG. IN KEINEM FALL SOLL DAS\nAUTOREN ODER URHEBERRECHTSINHABER HAFTEN FÜR JEGLICHE ANSPRÜCHE, SCHÄDEN ODER ANDERES\nHAFTUNG, OB AUS VERTRAGSHANDELN, DEUTLICH ODER ANDERWEITIG, AUS,\nAUSSER ODER IN VERBINDUNG MIT DER SOFTWARE ODER DER NUTZUNG ODER ANDEREN HANDELN IN DER\nSOFTWARE.",

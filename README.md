@@ -104,8 +104,9 @@ If you like my work, please feel free to provide a personal donation
 (this is a personal Donate link for DutchmanNL, no relation to the ioBroker Project !)  
 [![Donate](https://raw.githubusercontent.com/DrozmotiX/ioBroker.switchbot-hub/main/admin/button.png)](http://paypal.me/DutchmanNL)
 
-### **WORK IN PROGRESS**
-* (Dutchman) Support for IR remote of type Air Conditioner added
+### 0.1.1 (2021-09-03)
+* (Dutchman) Support for IR remote of type Air Conditioner added  
+
 ### 0.1.0 (2021-09-03)
 * (Dutchman) Initial alpha release, Physical devices implemented
 * (Dutchman) Only curtains and SwitchBots can be controlled currently
