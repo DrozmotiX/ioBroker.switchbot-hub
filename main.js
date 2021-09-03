@@ -1,7 +1,7 @@
 'use strict';
 
 /*
- * Created with @iobroker/create-adapter v1.34.1
+ * Created with @ioBroker/create-adapter v1.34.1
  */
 
 // The adapter-core module gives you access to the core ioBroker functions
@@ -10,7 +10,7 @@ const utils = require('@iobroker/adapter-core');
 const stateAttr = require(`${__dirname}/lib/state_attr.js`); // Load attribute library
 const {default: axios} = require('axios');
 
-const stateExpire = {}; // Array containing all times for online state expire
+// const stateExpire = {}; // Array containing all times for online state expire
 const warnMessages = {}; // Array containing sentry messages
 const watchdogTimer = {}; // Array containing all times for watchdog loops
 
@@ -42,97 +42,16 @@ class SwitchbotHub extends utils.Adapter {
 		this.setState('info.connection', false, true);
 
 		// Check if token is provided
-		if (!this.config.openToken){
+		if (!this.config.openToken) {
 			this.log.error('*** No token provided, Please enter your token in adapter settings !!!  ***');
-			// this.terminate ? this.terminate('Cannot work without token, adapter disabled') : process.exit();
 		}
-
-		// Load all device and their related states & values
-		const getDevices = async () => {
-			try {
-
-				// Call API and get all devices
-				const apiResponse  = await this.apiCall(`/v1.0/devices`);
-				this.log.debug(`[getDevices API response]: ${JSON.stringify(apiResponse)}`);
-				if  (!apiResponse) throw new Error(`Can not get device list from SwitchBot API`);
-				this.setState('info.connection', true, true);
-
-				const arrayHandler = async (deviceArray) =>{
-					for (const device in deviceArray){
-						this.devices[deviceArray[device].deviceId] = deviceArray[device];
-						await this.extendObjectAsync(deviceArray[device].deviceId, {
-							type: 'device',
-							common: {
-								name: deviceArray[device].deviceName
-							},
-							native: {},
-						});
-
-						//ToDo: consider to remove this channel or make optional
-						// Write info data of device to states
-						for (const infoState in deviceArray[device]) {
-							await this.stateSetCreate(`${deviceArray[device].deviceId}._info.${infoState}`, infoState, deviceArray[device][infoState]);
-						}
-
-						// Request device status
-						this.log.debug(`[deviceStatus for ]: ${JSON.stringify(this.devices[device])}`);
-						await deviceStatus(deviceArray[device].deviceId);
-
-					}
-				};
-
-				const deviceList = apiResponse.body.deviceList;
-				// const infraredRemoteList = apiResponse.body.infraredRemoteList;
-
-				this.log.info(`Connected to SwitchBot API found ${deviceList.length} devices`);
-				this.log.info(`Will refresh states every ${this.config.intervall} Minutes`);
-
-				if (!deviceList) throw new Error(`Can not handle device list from SwitchBot API`);
-
-				try {
-					await arrayHandler(deviceList);
-					// await arrayHandler(infraredRemoteList);
-				} catch (error) {
-					throw new Error(`[ArrayHandler] ${error}`);
-				}
-
-				this.log.info(`All devices and states loaded, adapter ready`);
-				this.log.debug(`All devices and states : ${JSON.stringify(this.devices)}`);
-
-			} catch (error) {
-				this.log.error(`Get/update of devices failed : ${error}`);
-				this.setState('info.connection', false, true);
-			}
-		};
-
-		/**
-		 * Get all vales for specific device
-		 *
-		 * @param {string} [deviceId] - deviceId of SwitchBot device
-		 */
-		const deviceStatus = async (deviceId) => {
-			try {
-
-				const apiResponse  = await this.apiCall(`/v1.0/devices/${deviceId}/status`);
-				const devicesValues = apiResponse.body; //.body.deviceList;
-				this.log.debug(`[deviceStatus apiResponse ]: ${JSON.stringify(this.devices[apiResponse])}`);
-				if (!devicesValues) throw new Error(`Empty device list received, cannot process`);
-				this.devices[deviceId].states = {};
-
-				// Write status data of device to states
-				for (const statusState in devicesValues) {
-					await this.stateSetCreate(`${deviceId}.${statusState}`, statusState, devicesValues[statusState]);
-					this.devices[deviceId].states[statusState] = devicesValues[statusState];
-				}
-
-			} catch (error) {
-				this.log.error(`Cannot get/update status of ${this.devices[deviceId].deviceName} ${error}`);
-			}
-		};
 
 		// Request devices, create related objects and get all values
 		try {
-			await getDevices();
+			await this.loadDevices();
+		} catch (error) {
+			this.log.error(`Init Error ${error}`);
+		}
 
 			// Reset timer (if running) and start new one for next watchdog interval
 			if (watchdogTimer[`all`]) {
@@ -143,20 +62,15 @@ class SwitchbotHub extends utils.Adapter {
 
 				if (this.devices.length > 0) {
 
-					for (const deviceId in this.devices){
-						await deviceStatus(deviceId);
+					for (const deviceId in this.devices) {
+						await this.deviceStatus(deviceId);
 					}
 
-				} else {
-					await getDevices();
-				}
+			} else { // Devices not loaded, request all
+					await this.loadDevices();
+			}
 
-			}, (this.config.intervall * 60000));
-
-		}catch (error) {
-			this.log.error(`Init Error ${error}`);
-		}
-
+		}, (this.config.intervall * 60000));
 	}
 
 	/**
@@ -165,7 +79,7 @@ class SwitchbotHub extends utils.Adapter {
 	 */
 	onUnload(callback) {
 		try {
-			for (const device in watchdogTimer){
+			for (const device in watchdogTimer) {
 				if (watchdogTimer[device]) {
 					clearTimeout(watchdogTimer[device]);
 					delete watchdogTimer[device];
@@ -181,21 +95,18 @@ class SwitchbotHub extends utils.Adapter {
 	}
 
 	/**
-	 * Make API call to SwitchBot API and return response
+	 * Make API call to SwitchBot API and return response.
 	 * See documentation at https://github.com/OpenWonderLabs/SwitchBotAPI
 	 *
 	 * @param {string} [url] - Endpoint to handle API call, like `/v1.0/devices`
-	 * @param {string} [method] - API method, get (default) or post
-	 * @param {object} [data] - API method, get (default) or post
+	 * @param {object} [data] - Data for api post calls, if empty get will be executed
 	 */
-	apiCall(url, method, data) {
+	apiCall(url, data) {
 
 		if (!url) throw new Error(`No URL provided, cannot make API call`);
 		if (!data) {
-			method = `get`;
-			return axios.get(url,{
+			return axios(url, {
 				baseURL: 'https://api.switch-bot.com',
-				// method: method,
 				url: url,
 				timeout: 1000,
 				headers: {'Authorization': this.config.openToken}
@@ -205,8 +116,8 @@ class SwitchbotHub extends utils.Adapter {
 					throw new Error(`Cannot handle API call : ${error}`);
 				});
 
-		} else if (method === 'post') {
-			return axios.post(url,data,{
+		} else {
+			return axios.post(url, data, {
 				baseURL: 'https://api.switch-bot.com',
 				url: url,
 				timeout: 1000,
@@ -222,6 +133,37 @@ class SwitchbotHub extends utils.Adapter {
 		}
 	}
 
+	// Load all device and their related states & values
+	async loadDevices() {
+		try {
+
+			// Call API and get all devices
+			const apiResponse = await this.apiCall(`/v1.0/devices`);
+			this.log.debug(`[getDevices API response]: ${JSON.stringify(apiResponse)}`);
+			if (!apiResponse) {
+				this.log.error(`Empty device list received, cannot process`);
+				return;
+			}
+			this.setState('info.connection', true, true);
+
+			const arrayHandler = async (deviceArray) => {
+				for (const device in deviceArray) {
+					this.devices[deviceArray[device].deviceId] = deviceArray[device];
+					await this.extendObjectAsync(deviceArray[device].deviceId, {
+						type: 'device',
+						common: {
+							name: deviceArray[device].deviceName
+						},
+						native: {},
+					});
+
+					//ToDo: consider to remove this channel or make optional
+					// Write info data of device to states
+					for (const infoState in deviceArray[device]) {
+						await this.stateSetCreate(`${deviceArray[device].deviceId}._info.${infoState}`, infoState, deviceArray[device][infoState]);
+					}
+
+					// Create states not provided by API (no get, post  only)
 					switch (deviceArray[device].deviceType) {
 
 						case ('Bot'):
@@ -230,8 +172,74 @@ class SwitchbotHub extends utils.Adapter {
 							break;
 
 					}
-					}
-					}
+
+					// Request device status
+					this.log.debug(`[deviceStatus for ]: ${JSON.stringify(this.devices[device])}`);
+					await this.deviceStatus(deviceArray[device].deviceId);
+
+				}
+			};
+
+			const deviceList = apiResponse.body.deviceList;
+			const infraredRemoteList = apiResponse.body.infraredRemoteList;
+
+			this.log.info(`Connected to SwitchBot API found ${deviceList.length} devices`);
+			this.log.info(`Will refresh states every ${this.config.intervall} Minutes`);
+
+			try {
+				if (deviceList != null) {
+					await arrayHandler(deviceList);
+				} else {
+					this.log.error(`Can not handle device list from SwitchBot API`);
+				}
+
+				if (infraredRemoteList != null) {
+					await arrayHandler(infraredRemoteList);
+				} else {
+					this.log.error(`Can not handle infrared remote list from SwitchBot API`);
+				}
+
+			} catch (error) {
+				throw new Error(`[ArrayHandler] ${error}`);
+			}
+
+			this.log.info(`All devices and values loaded, adapter ready`);
+			this.log.debug(`All devices and states : ${JSON.stringify(this.devices)}`);
+
+		} catch (error) {
+			this.log.error(`Get/update of devices failed : ${error}`);
+			this.setState('info.connection', false, true);
+		}
+	}
+
+	/**
+	 * Get all vales for specific device
+	 *
+	 * @param {string} [deviceId] - deviceId of SwitchBot device
+	 */
+	async deviceStatus(deviceId) {
+		try {
+
+			const apiResponse = await this.apiCall(`/v1.0/devices/${deviceId}/status`);
+			const devicesValues = apiResponse.body;
+			this.log.debug(`[deviceStatus apiResponse ]: ${JSON.stringify(this.devices[apiResponse])}`);
+			if (!devicesValues) {
+				this.log.error(`Empty status list received, cannot process`);
+				return;
+			}
+			this.devices[deviceId].states = {};
+
+			// Write status data of device to states
+			for (const statusState in devicesValues) {
+				await this.stateSetCreate(`${deviceId}.${statusState}`, statusState, devicesValues[statusState]);
+				this.devices[deviceId].states[statusState] = devicesValues[statusState];
+			}
+
+		} catch (error) {
+			this.log.error(`Cannot get/update status of ${this.devices[deviceId].deviceName} ${error}`);
+		}
+	}
+
 	/**
 	 * State create and value update handler
 	 * @param {string} stateName ID of state to create
@@ -257,15 +265,17 @@ class SwitchbotHub extends utils.Adapter {
 				}
 			}
 
-			if (stateAttr[name] !== undefined && stateAttr[name].min !== undefined){
+			if (stateAttr[name] !== undefined && stateAttr[name].min !== undefined) {
 				common.min = stateAttr[name].min;
 			}
-			if (stateAttr[name] !== undefined && stateAttr[name].max !== undefined){
+			if (stateAttr[name] !== undefined && stateAttr[name].max !== undefined) {
 				common.max = stateAttr[name].max;
 			}
-
+			if (stateAttr[name] !== undefined && stateAttr[name].def !== undefined) {
+				common.def = stateAttr[name].def;
+			}
 			common.name = stateAttr[name] !== undefined ? stateAttr[name].name || name : name;
-			common.type = stateAttr[name] !== undefined ? stateAttr[name].type || typeof (value) : typeof (value) ;
+			common.type = stateAttr[name] !== undefined ? stateAttr[name].type || typeof (value) : typeof (value);
 			common.role = stateAttr[name] !== undefined ? stateAttr[name].role || 'state' : 'state';
 			common.read = true;
 			common.unit = stateAttr[name] !== undefined ? stateAttr[name].unit || '' : '';
@@ -296,7 +306,7 @@ class SwitchbotHub extends utils.Adapter {
 			}
 
 			// Set value to state including expiration time
-			if (value !== null || value !== undefined) {
+			if (value !== null) {
 				await this.setStateChangedAsync(stateName, {
 					val: typeof value === 'object' ? JSON.stringify(value) : value, // real objects are not allowed
 					ack: true,
@@ -341,19 +351,21 @@ class SwitchbotHub extends utils.Adapter {
 	 */
 	async onStateChange(id, state) {
 		if (state && state.ack === false) {
+
 			// Split state name in segments to be used later
 			const deviceArray = id.split('.');
 			const deviceId = deviceArray[2];
 			const deviceType = this.devices[deviceArray[2]].deviceType;
 
-			let apiURL = '';
+			// Default configuration for SmartBot POST api
+			const apiURL = `/v1.0/devices/${deviceId}/commands`;
 			const apiData = {
 				'command': 'setAll',
 				'parameter': state.val,
 				'commandType': 'command'
 			};
 
-			//ToDo: Implement all device types
+			// Prepare data to submit API call
 			switch (deviceType) {
 
 				case ('Bot'):
@@ -364,7 +376,7 @@ class SwitchbotHub extends utils.Adapter {
 					} else if (deviceArray[3] === 'state') {
 						if (state.val) {
 							apiData.command = `turnOn`;
-						apiData.parameter = `default`;
+							apiData.parameter = `default`;
 						} else {
 							apiData.command = `turnOff`;
 							apiData.parameter = `default`;
@@ -374,7 +386,6 @@ class SwitchbotHub extends utils.Adapter {
 					break;
 
 				case ('Curtain'):
-					apiURL =`/v1.0/devices/${deviceId}/commands`;
 					apiData.command = `setPosition`;
 					apiData.parameter = `0,ff,${state.val}`;
 
@@ -411,12 +422,6 @@ class SwitchbotHub extends utils.Adapter {
 			} catch (e) {
 				this.log.error(`Cannot send command to API : ${e}`);
 			}
-
-			// The state was changed
-			// this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-		} else {
-			// The state was deleted
-			// this.log.info(`state ${id} deleted`);
 		}
 	}
 

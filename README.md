@@ -30,9 +30,13 @@ Please follow these  steps to get your Open Token!
 4. Provide you token in adapter settings
 
 ### Known limitations
-#### Request limit
-The amount of API calls per day is limited to 1000 times, as a result of that we must limit the amount of API calls handled during one day
-(1000 / 24 / 60 = 0.7 calls at max  per minute)
+
+Before submitting an issue, please review below "Known Limitations" if your problem is related to it or check the [API issue overview](https://github.com/OpenWonderLabs/SwitchBotAPI/issues)  
+Several issues need adjustment of the SmartBot API which cannot be handled by this adapter/developer.
+
+#### Request limit 
+The amount of API calls per day is limited to 1000 times, as a result of that we must limit the amount of API calls handled during one day  
+(1000 / 24 / 60 = 0.7 calls at max  per minute) [See issue to Add Local API Support](https://github.com/OpenWonderLabs/SwitchBotAPI/issues/19)
 
 At adapter start we will first make 1 API call to get all devices + 1 API for each device to get all values.
 If u have 5 curtains for example, the adapter start will need 6 API calls to have all data complete.
@@ -47,11 +51,13 @@ To avoid reaching the limit to soon, proper intervall time must be defined durin
   - If your device is set to Press, the state On/Off does not reflect the real value but just trigger a press
 
 ## ToDo
-[ ] Code stability & optimization
-[ ] API error handling  & messages
-[ ] Test all device Types, see list below
-[ ] Filter states not needed in device tree
-[ ] Ensure proper intervals for each device type (due to API request limit)
+[ ] Code stability & optimization  
+[ ] API error handling & messages  
+[ ] Add support for IR-remote controls
+[ ] Test all device Types, see list below  
+[ ] Filter states not needed in device tree  
+[ ] Ensure proper intervals for each device type (due to API request limit)  
+[ ] Add support to control all physical devices (currently only curtain and bot are supported)
 
 ### Support Physical devices
 
@@ -112,7 +118,7 @@ Not yet implemented
 
 ## Support me
 If you like my work, please feel free to provide a personal donation  
-(this is an personal Donate link for DutchmanNL, no relation to the ioBroker Project !)  
+(this is a personal Donate link for DutchmanNL, no relation to the ioBroker Project !)  
 [![Donate](https://raw.githubusercontent.com/DrozmotiX/ioBroker.switchbot-hub/main/admin/button.png)](http://paypal.me/DutchmanNL)
 
 ### **WORK IN PROGRESS**
