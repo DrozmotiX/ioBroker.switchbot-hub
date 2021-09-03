@@ -11,6 +11,8 @@ const stateAttr = require(`${__dirname}/lib/state_attr.js`); // Load attribute l
 const irDeviceButtons = require(`${__dirname}/lib/irRemoteDevices.js`); // Load irRemote Button definitions
 const {default: axios} = require('axios');
 
+const disableSentry = false; // Ensure to set to true during development !
+
 // const stateExpire = {}; // Array containing all times for online state expire
 const warnMessages = {}; // Array containing sentry messages
 const dataRefreshTimer = {}; // Array containing all times for watchdog loops
@@ -112,28 +114,36 @@ class SwitchbotHub extends utils.Adapter {
 	 * @param {string} [deviceId] - deviceId of SwitchBot device
 	 */
 	defineIntervallTime(deviceId){
-		let timeInMs = 3600000; //  Default to 1 hour
 
-		if (!this.devices[deviceId] || !this.devices[deviceId].deviceType) return;
+		try {
+			let timeInMs = 3600000; //  Default to 1 hour
 
-		switch (this.devices[deviceId].deviceType) {
-			case ('Plug'):
-				timeInMs = intervallSettings.Plug;
-				break;
-			case ('Curtain'):
-				timeInMs = intervallSettings.Curtain;
-				break;
-			case ('Meter'):
-				timeInMs = intervallSettings.Meter;
-				break;
-			case ('Humidifier'):
-				timeInMs = intervallSettings.Humidifier;
-				break;
-			case ('Smart Fan'):
-				timeInMs = intervallSettings.SmartFan;
-				break;
+			if (!this.devices[deviceId] || !this.devices[deviceId].deviceType) return;
+
+			switch (this.devices[deviceId].deviceType) {
+				case ('Plug'):
+					timeInMs = intervallSettings.Plug;
+					break;
+				case ('Curtain'):
+					timeInMs = intervallSettings.Curtain;
+					break;
+				case ('Meter'):
+					timeInMs = intervallSettings.Meter;
+					break;
+				case ('Humidifier'):
+					timeInMs = intervallSettings.Humidifier;
+					break;
+				case ('Smart Fan'):
+					timeInMs = intervallSettings.SmartFan;
+					break;
+			}
+			this.devices[deviceId].intervallTimer = timeInMs;
+
+		} catch (error) {
+
+			this.sendSentry(`[defineIntervallTime]`, `${error}`);
+
 		}
-		this.devices[deviceId].intervallTimer = timeInMs;
 	}
 
 	/**
@@ -153,6 +163,7 @@ class SwitchbotHub extends utils.Adapter {
 
 			callback();
 		} catch (e) {
+			this.sendSentry(`[onUnload]`, `${e}`);
 			callback();
 		}
 	}
@@ -285,14 +296,14 @@ class SwitchbotHub extends utils.Adapter {
 				}
 
 			} catch (error) {
-				throw new Error(`[ArrayHandler] ${error}`);
+				this.sendSentry(`[arrayHandler]`, `${error}`);
 			}
 
 			this.log.info(`All devices and values loaded, adapter ready`);
 			this.log.debug(`All devices configuration data : ${JSON.stringify(this.devices)}`);
 
 		} catch (error) {
-			this.log.error(`Get/update of devices failed : ${error}`);
+			this.sendSentry(`[loadDevices]`, `${error}`);
 			this.setState('info.connection', false, true);
 		}
 	}
@@ -321,62 +332,66 @@ class SwitchbotHub extends utils.Adapter {
 			}
 
 		} catch (error) {
-			this.log.error(`Cannot get/update status of ${this.devices[deviceId].deviceName} ${error}`);
+			this.sendSentry(`[deviceStatus]`, `${error}`);
 		}
 	}
 
 	async infraredRemoteDevices(remoteArray) {
-		for (const remoteControl in remoteArray) {
-			this.devices[remoteArray[remoteControl].deviceId] = remoteArray[remoteControl];
-			await this.extendObjectAsync(remoteArray[remoteControl].deviceId, {
-				type: 'device',
-				common: {
-					name: remoteArray[remoteControl].deviceName
-				},
-				native: {},
-			});
-
-			// Write info data of device to states
-			for (const infoState in remoteArray[remoteControl]) {
-				await this.stateSetCreate(`${remoteArray[remoteControl].deviceId}._info.${infoState}`, infoState, remoteArray[remoteControl][infoState]);
-			}
-
-			// Get all required IR buttons from Library
-			if (!irDeviceButtons[remoteArray[remoteControl].remoteType]){
-				this.log.error(`IR Remote Type ${[remoteArray[remoteControl].remoteType]} not yet implemented`);
-			}
-
-			const allIrButtons = irDeviceButtons[remoteArray[remoteControl].remoteType];
-
-			// Add default buttons if IR type !== Others
-			if (remoteArray[remoteControl].remoteType !== 'Others'){
-				allIrButtons.turnOn = {name: 'Turn device On'};
-				allIrButtons.turnOff = {name: 'Turn device Off'};
-			}
-
-			// Create IR specific channels
-			for (const irButton in allIrButtons) {
-
-				const common = {
-					name: allIrButtons[irButton].name,
-					type: allIrButtons[irButton]!== undefined ? allIrButtons[irButton].type || 'number' : 'number',
-					role: allIrButtons[irButton]!== undefined ? allIrButtons[irButton].type || 'button' : 'button',
-					write: true,
-				};
-
-				if (allIrButtons[irButton].states){
-					common.states = allIrButtons[irButton].states;
-				}
-				if (allIrButtons[irButton].def){
-					common.def = allIrButtons[irButton].def;
-				}
-				const stateName = irButton.replace(' ', '_');
-				await this.extendObjectAsync(`${remoteArray[remoteControl].deviceId}.${stateName}`, {
-					type: 'state',
-					common
+		try {
+			for (const remoteControl in remoteArray) {
+				this.devices[remoteArray[remoteControl].deviceId] = remoteArray[remoteControl];
+				await this.extendObjectAsync(remoteArray[remoteControl].deviceId, {
+					type: 'device',
+					common: {
+						name: remoteArray[remoteControl].deviceName
+					},
+					native: {},
 				});
-				this.subscribeStates(`${remoteArray[remoteControl].deviceId}.${stateName}`);
+
+				// Write info data of device to states
+				for (const infoState in remoteArray[remoteControl]) {
+					await this.stateSetCreate(`${remoteArray[remoteControl].deviceId}._info.${infoState}`, infoState, remoteArray[remoteControl][infoState]);
+				}
+
+				// Get all required IR buttons from Library
+				if (!irDeviceButtons[remoteArray[remoteControl].remoteType]){
+					this.log.error(`IR Remote Type ${[remoteArray[remoteControl].remoteType]} not yet implemented`);
+				}
+
+				const allIrButtons = irDeviceButtons[remoteArray[remoteControl].remoteType];
+
+				// Add default buttons if IR type !== Others
+				if (remoteArray[remoteControl].remoteType !== 'Others'){
+					allIrButtons.turnOn = {name: 'Turn device On'};
+					allIrButtons.turnOff = {name: 'Turn device Off'};
+				}
+
+				// Create IR specific channels
+				for (const irButton in allIrButtons) {
+
+					const common = {
+						name: allIrButtons[irButton].name,
+						type: allIrButtons[irButton]!== undefined ? allIrButtons[irButton].type || 'number' : 'number',
+						role: allIrButtons[irButton]!== undefined ? allIrButtons[irButton].type || 'button' : 'button',
+						write: true,
+					};
+
+					if (allIrButtons[irButton].states){
+						common.states = allIrButtons[irButton].states;
+					}
+					if (allIrButtons[irButton].def){
+						common.def = allIrButtons[irButton].def;
+					}
+					const stateName = irButton.replace(' ', '_');
+					await this.extendObjectAsync(`${remoteArray[remoteControl].deviceId}.${stateName}`, {
+						type: 'state',
+						common
+					});
+					this.subscribeStates(`${remoteArray[remoteControl].deviceId}.${stateName}`);
+				}
 			}
+		}catch (error) {
+			this.sendSentry(`[infraredRemoteDevices]`, `${error}`);
 		}
 	}
 
@@ -480,7 +495,7 @@ class SwitchbotHub extends utils.Adapter {
 			common.write && this.subscribeStates(stateName);
 
 		} catch (error) {
-			throw new Error(`[stateSetCreate] ${error}`);
+			this.sendSentry(`[stateSetCreate]`, `${error}`);
 		}
 	}
 
@@ -490,109 +505,139 @@ class SwitchbotHub extends utils.Adapter {
 	 * @param {ioBroker.State | null | undefined} state
 	 */
 	async onStateChange(id, state) {
-		if (state && state.ack === false) {
+		try {
+			if (state && state.ack === false) {
 
-			// Split state name in segments to be used later
-			const deviceArray = id.split('.');
-			const deviceId = deviceArray[2];
-			const deviceType = this.devices[deviceArray[2]].deviceType;
+				// Split state name in segments to be used later
+				const deviceArray = id.split('.');
+				const deviceId = deviceArray[2];
+				const deviceType = this.devices[deviceArray[2]].deviceType;
 
-			// Default configuration for SmartBot POST api
-			const apiURL = `/v1.0/devices/${deviceId}/commands`;
-			const apiData = {
-				'command': 'setAll',
-				'parameter': state.val,
-				'commandType': 'command'
-			};
+				// Default configuration for SmartBot POST api
+				const apiURL = `/v1.0/devices/${deviceId}/commands`;
+				const apiData = {
+					'command': 'setAll',
+					'parameter': state.val,
+					'commandType': 'command'
+				};
 
-			// Prepare data to submit API call
-			if (deviceType) { // State change regular device  detected
-				switch (deviceType) {
+				// Prepare data to submit API call
+				if (deviceType) { // State change regular device  detected
+					switch (deviceType) {
 
-					case ('Bot'):
+						case ('Bot'):
 
-						if (deviceArray[3] === 'press') {
-							apiData.command = `press`;
-							apiData.parameter = `default`;
-						} else if (deviceArray[3] === 'state') {
-							if (state.val) {
-								apiData.command = `turnOn`;
+							if (deviceArray[3] === 'press') {
+								apiData.command = `press`;
 								apiData.parameter = `default`;
-							} else {
-								apiData.command = `turnOff`;
-								apiData.parameter = `default`;
+							} else if (deviceArray[3] === 'state') {
+								if (state.val) {
+									apiData.command = `turnOn`;
+									apiData.parameter = `default`;
+								} else {
+									apiData.command = `turnOff`;
+									apiData.parameter = `default`;
+								}
 							}
-						}
 
-						break;
+							break;
 
-					case ('Curtain'):
-						apiData.command = `setPosition`;
-						apiData.parameter = `0,ff,${state.val}`;
-						break;
+						case ('Curtain'):
+							apiData.command = `setPosition`;
+							apiData.parameter = `0,ff,${state.val}`;
+							break;
 
-					case ('Humidifier'):
-						//ToDo: add proper definitions and values
-						break;
+						case ('Humidifier'):
+							//ToDo: add proper definitions and values
+							break;
 
-					case ('Plug'):
-						//ToDo: add proper definitions and values
-						break;
+						case ('Plug'):
+							//ToDo: add proper definitions and values
+							break;
 
-					case ('Smart Fan'):
-						//ToDo: add proper definitions and values
-						break;
+						case ('Smart Fan'):
+							//ToDo: add proper definitions and values
+							break;
 
-					default:
+						default:
 
+					}
+				} else { // State change of IR Remote  detected
+					apiData.parameter = `default`;
+					switch (deviceArray[3]) {
+
+						case ('turnOn'):
+							apiData.command = `turnOn`;
+							break;
+
+						case ('turnOff'):
+							apiData.command = `turnOff`;
+							break;
+
+					}
+
+					if (deviceArray[3] === 'temperature'
+						|| deviceArray[3] === 'mode'
+						|| deviceArray[3] === 'fan_speed'
+						|| deviceArray[3] === 'power_state'
+					){
+						this.log.error(`Command ${deviceArray[3]} not (yet) implemented`);
+						return;
+						//ToDo: Define routine to have correct state values
+						// apiData.command = `setAll`;
+						// apiData.parameter = `{
+						// 	temperature : ${},
+						// 	mode : ${},
+						// 	fan speed : ${},
+						// 	power state : ${},
+						// }`
+					}
 				}
-			} else { // State change of IR Remote  detected
-				apiData.parameter = `default`;
-				switch (deviceArray[3]) {
 
-					case ('turnOn'):
-						apiData.command = `turnOn`;
-						break;
+				// Make API call
+				try {
+					this.log.debug(`[sendState] ${JSON.stringify(this.devices[deviceId])}: ${JSON.stringify(apiData)}`);
+					const apiResponse = await this.apiCall(`${apiURL}`, `${JSON.stringify(apiData)}`);
+					this.log.debug(`[sendState apiResponse]: ${JSON.stringify(apiResponse)}`);
 
-					case ('turnOff'):
-						apiData.command = `turnOff`;
-						break;
-
-				}
-
-				if (deviceArray[3] === 'temperature'
-					|| deviceArray[3] === 'mode'
-					|| deviceArray[3] === 'fan_speed'
-					|| deviceArray[3] === 'power_state'
-				){
-					this.log.error(`Command ${deviceArray[3]} not (yet) implemented`);
-					return;
-					//ToDo: Define routine to have correct state values
-					// apiData.command = `setAll`;
-					// apiData.parameter = `{
-					// 	temperature : ${},
-					// 	mode : ${},
-					// 	fan speed : ${},
-					// 	power state : ${},
-					// }`
+					// Set ACK to true if API post  command successfully
+					if (apiResponse.statusCode === 100) {
+						this.setState(id, {ack: true});
+					} else {
+						this.log.error(`Unable to send command : ${apiResponse.message}`);
+					}
+				} catch (e) {
+					this.log.error(`Cannot send command to API : ${e}`);
 				}
 			}
+		} catch (error) {
+			this.sendSentry(`[onStateChange]`, `${error}`);
+		}
+	}
 
-			// Make API call
-			try {
-				this.log.debug(`[sendState] ${JSON.stringify(this.devices[deviceId])}: ${JSON.stringify(apiData)}`);
-				const apiResponse = await this.apiCall(`${apiURL}`, `${JSON.stringify(apiData)}`);
-				this.log.debug(`[sendState apiResponse]: ${JSON.stringify(apiResponse)}`);
+	/**
+	 * Sentry error message handler
+	 * @param {string} msg Message to send
+	 * @param {object} error Error message (including stack) to handle exceptions
+	 */
+	sendSentry(msg, error) {
 
-				// Set ACK to true if API post  command successfully
-				if (apiResponse.statusCode === 100) {
-					this.setState(id, {ack: true});
+		let sentryMessage = msg; // If no (stack) error is provided just send the message
+		if (error) sentryMessage = `${msg} | Error : ${error} | StackTrace : ${error.stack}}`;
+
+
+		if (!disableSentry) {
+			if (this.supportsFeature && this.supportsFeature('PLUGINS')) {
+				const sentryInstance = this.getPluginInstance('sentry');
+				if (sentryInstance) {
+					this.log.info(`[Error caught and sent to Sentry, thank you for collaborating!]  ${sentryMessage}`);
+					sentryInstance.getSentryObject().captureException(sentryMessage);
 				} else {
-					this.log.error(`Unable to send command : ${apiResponse.message}`);
+					this.log.error(`Sentry disabled, error caught : ${sentryMessage}`);
 				}
-			} catch (e) {
-				this.log.error(`Cannot send command to API : ${e}`);
 			}
+		} else {
+			this.log.error(`Sentry disabled, error caught : ${sentryMessage}`);
 		}
 	}
 
