@@ -307,7 +307,7 @@ class SwitchbotHub extends utils.Adapter {
 
 			const apiResponse = await this.apiCall(`/v1.0/devices/${deviceId}/status`);
 			const devicesValues = apiResponse.body;
-			th	is.log.debug(`[deviceStatus apiResponse ]: ${JSON.stringify(apiResponse)}`);
+			this.log.debug(`[deviceStatus apiResponse ]: ${JSON.stringify(apiResponse)}`);
 			if (!devicesValues || Object.keys(devicesValues).length === 0) {
 				this.log.debug(`No States found for type ${this.devices[deviceId].deviceType}`);
 				return;
@@ -341,15 +341,42 @@ class SwitchbotHub extends utils.Adapter {
 				await this.stateSetCreate(`${remoteArray[remoteControl].deviceId}._info.${infoState}`, infoState, remoteArray[remoteControl][infoState]);
 			}
 
-			// // Create states not provided by API (no get, post  only)
-			switch (remoteArray[remoteControl].remoteType) {
-
-				case ('Air Conditioner'):
-
-					break;
-
+			// Get all required IR buttons from Library
+			if (!irDeviceButtons[remoteArray[remoteControl].remoteType]){
+				this.log.error(`IR Remote Type ${[remoteArray[remoteControl].remoteType]} not yet implemented`);
 			}
 
+			const allIrButtons = irDeviceButtons[remoteArray[remoteControl].remoteType];
+
+			// Add default buttons if IR type !== Others
+			if (remoteArray[remoteControl].remoteType !== 'Others'){
+				allIrButtons.turnOn = {name: 'Turn device On'};
+				allIrButtons.turnOff = {name: 'Turn device Off'};
+			}
+
+			// Create IR specific channels
+			for (const irButton in allIrButtons) {
+
+				const common = {
+					name: allIrButtons[irButton].name,
+					type: allIrButtons[irButton]!== undefined ? allIrButtons[irButton].type || 'number' : 'number',
+					role: allIrButtons[irButton]!== undefined ? allIrButtons[irButton].type || 'button' : 'button',
+					write: true,
+				};
+
+				if (allIrButtons[irButton].states){
+					common.states = allIrButtons[irButton].states;
+				}
+				if (allIrButtons[irButton].def){
+					common.def = allIrButtons[irButton].def;
+				}
+				const stateName = irButton.replace(' ', '_');
+				await this.extendObjectAsync(`${remoteArray[remoteControl].deviceId}.${stateName}`, {
+					type: 'state',
+					common
+				});
+				this.subscribeStates(`${remoteArray[remoteControl].deviceId}.${stateName}`);
+			}
 		}
 	}
 
@@ -498,13 +525,12 @@ class SwitchbotHub extends utils.Adapter {
 
 					break;
 
-				case ('Curtain'):
-					apiData.command = `setPosition`;
-					apiData.parameter = `0,ff,${state.val}`;
+					case ('Curtain'):
+						apiData.command = `setPosition`;
+						apiData.parameter = `0,ff,${state.val}`;
+						break;
 
-					break;
-
-				case ('Humidifier'):
+					case ('Humidifier'):
 					//ToDo: add proper definitions and values
 					break;
 
