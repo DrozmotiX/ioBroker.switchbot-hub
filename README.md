@@ -122,7 +122,7 @@ If you like my work, please feel free to provide a personal donation
 [![Donate](https://raw.githubusercontent.com/DrozmotiX/ioBroker.switchbot-hub/main/admin/button.png)](http://paypal.me/DutchmanNL)
 
 ### **WORK IN PROGRESS**
-* (Dutchman) Initial alpha release, Physical devices showing/updated 
+* (Dutchman) Initial alpha release, Physical devices implemented
 * (Dutchman) Only curtains and SwitchBots can be controlled currently
 
 ## License
