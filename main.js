@@ -399,12 +399,12 @@ class SwitchbotHub extends utils.Adapter {
 			// Make API call
 			try {
 				this.log.debug(`[sendState] ${JSON.stringify(this.devices[deviceId])}: ${JSON.stringify(apiData)}`);
-				const apiResponse  = await this.apiCall(`${apiURL}`, `post`, `${JSON.stringify(apiData)}`);
+				const apiResponse = await this.apiCall(`${apiURL}`, `${JSON.stringify(apiData)}`);
 				this.log.debug(`[sendState apiResponse]: ${JSON.stringify(this.devices[apiResponse])}`);
 
 				// Set ACK to true if API post  command successfully
-				if (apiResponse.statusCode === 'success') {
-					this.setState(id,{ack: true});
+				if (apiResponse.statusCode == '100') {
+					this.setState(id, {ack: true});
 				} else {
 					this.log.error(`Unable to send command : ${apiResponse.message}`);
 				}
