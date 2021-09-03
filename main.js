@@ -222,6 +222,16 @@ class SwitchbotHub extends utils.Adapter {
 		}
 	}
 
+					switch (deviceArray[device].deviceType) {
+
+						case ('Bot'):
+							await this.stateSetCreate(`${deviceArray[device].deviceId}.press`, `press`, '');
+							await this.stateSetCreate(`${deviceArray[device].deviceId}.state`, `ON/OFF`, '');
+							break;
+
+					}
+					}
+					}
 	/**
 	 * State create and value update handler
 	 * @param {string} stateName ID of state to create
@@ -345,6 +355,23 @@ class SwitchbotHub extends utils.Adapter {
 
 			//ToDo: Implement all device types
 			switch (deviceType) {
+
+				case ('Bot'):
+
+					if (deviceArray[3] === 'press') {
+						apiData.command = `press`;
+						apiData.parameter = `default`;
+					} else if (deviceArray[3] === 'state') {
+						if (state.val) {
+							apiData.command = `turnOn`;
+						apiData.parameter = `default`;
+						} else {
+							apiData.command = `turnOff`;
+							apiData.parameter = `default`;
+						}
+					}
+
+					break;
 
 				case ('Curtain'):
 					apiURL =`/v1.0/devices/${deviceId}/commands`;
