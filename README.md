@@ -46,7 +46,7 @@ To avoid reaching the limit to soon, proper intervall time must be defined durin
 
 #### Control of SwitchBot
 - No status provided from API if switch is in position on or off [See issue Add Switch Mode Status to API for Bots](https://github.com/OpenWonderLabs/SwitchBotAPI/issues/20)
-- The adapter will always craete 2 states, press (toggle SwitchBot) and state (set On/Off). 
+- The adapter will always create 2 states, press (toggle SwitchBot) and state (set On/Off). 
   - If your device is set to Switch, the press command will fail!
   - If your device is set to Press, the state On/Off does not reflect the real value but just trigger a press
 

@@ -16,10 +16,60 @@
       "label": "Generate an Open Token within the app",
       "sm": 9
     },
-    "intervall": {
+      "_intervallSettings": {
+        "newLine": true,
+        "type": "header",
+        "text": "Choose your preferred refresh intervall times in minutes, please note the API limit ! (See Readme)",
+        "sm": 12,
+        "size": 3
+      },
+    "intervallAll": {
+      "newLine": true,
       "sm": 3,
       "type": "number",
-      "label": "Refresh interval in minutes",
+      "label": "Refresh all devices and values",
+      "min" : 1,
+      "max" : 1380,
+      "step": 1
+    },
+    "intervallHumidifier": {
+      "newLine": true,
+      "sm": 3,
+      "type": "number",
+      "label": "Refresh Humidifier values",
+      "min" : 1,
+      "max" : 1380,
+      "step": 1
+    },
+    "intervallMeter": {
+      "sm": 3,
+      "type": "number",
+      "label": "Refresh Meter values",
+      "min" : 1,
+      "max" : 1380,
+      "step": 1
+    },
+    "intervallCurtain": {
+      "newLine": true,
+      "sm": 3,
+      "type": "number",
+      "label": "Refresh Curtain values",
+      "min" : 1,
+      "max" : 1380,
+      "step": 1
+    },
+    "intervallPlug": {
+      "sm": 3,
+      "type": "number",
+      "label": "Refresh Plug values",
+      "min" : 1,
+      "max" : 1380,
+      "step": 1
+    },
+    "intervallSmartFan": {
+      "sm": 3,
+      "type": "number",
+      "label": "Refresh Smart Fan values",
       "min" : 1,
       "max" : 1380,
       "step": 1

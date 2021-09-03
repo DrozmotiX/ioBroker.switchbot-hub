@@ -12,7 +12,15 @@ const {default: axios} = require('axios');
 
 // const stateExpire = {}; // Array containing all times for online state expire
 const warnMessages = {}; // Array containing sentry messages
-const watchdogTimer = {}; // Array containing all times for watchdog loops
+const dataRefreshTimer = {}; // Array containing all times for watchdog loops
+const intervallSettings = {
+	all: 60 * 60000,
+	Curtain: 7 * 60000,
+	Humidifier: 7 * 60000,
+	Meter: 7 * 60000,
+	Plug: 30 * 60000,
+	SmartFan: 30 * 60000,
+};
 
 class SwitchbotHub extends utils.Adapter {
 
@@ -46,6 +54,14 @@ class SwitchbotHub extends utils.Adapter {
 			this.log.error('*** No token provided, Please enter your token in adapter settings !!!  ***');
 		}
 
+		// Load intervall settings
+		intervallSettings.all = this.config.intervallAll != null ? this.config.intervallAll * 60000 || intervallSettings.all : intervallSettings.all;
+		intervallSettings.Curtain = this.config.intervallCurtain != null ? this.config.intervallCurtain * 60000 || intervallSettings.Curtain : intervallSettings.Curtain;
+		intervallSettings.Humidifier = this.config.intervallHumidifier != null ? this.config.intervallHumidifier * 60000 || intervallSettings.Humidifier : intervallSettings.Humidifier;
+		intervallSettings.Meter = this.config.intervallMeter != null ? this.config.intervallMeter * 60000 || intervallSettings.Meter : intervallSettings.Meter;
+		intervallSettings.Plug = this.config.intervallPlug != null ? this.config.intervallPlug * 60000 || intervallSettings.Plug : intervallSettings.Plug;
+		intervallSettings.SmartFan = this.config.intervallSmartFan != null ? this.config.intervallSmartFan * 60000 || intervallSettings.SmartFan : intervallSettings.SmartFan;
+
 		// Request devices, create related objects and get all values
 		try {
 			await this.loadDevices();
@@ -53,24 +69,70 @@ class SwitchbotHub extends utils.Adapter {
 			this.log.error(`Init Error ${error}`);
 		}
 
-			// Reset timer (if running) and start new one for next watchdog interval
-			if (watchdogTimer[`all`]) {
-				clearTimeout(watchdogTimer[`all`]);
-				watchdogTimer[`all`] = null;
+		// Start intervall to refresh all devices and data
+		await this.dataRefresh('all');
+
+	}
+
+	/**
+	 * Get & refresh all vales for specific device by intervall setting
+	 *
+	 * @param {string} [deviceId] - deviceId of SwitchBot device
+	 */
+	async dataRefresh(deviceId){
+
+		let intervallTimer = intervallSettings.all;
+
+		if (this.devices[deviceId] && this.devices[deviceId].intervallTimer) {
+			intervallTimer = this.devices[deviceId].intervallTimer;
+		}
+
+		// Reset timer (if running) and start new one for next watchdog interval
+		if (dataRefreshTimer[deviceId]) {
+			clearTimeout(dataRefreshTimer[deviceId]);
+			dataRefreshTimer[deviceId] = null;
+		}
+		dataRefreshTimer[deviceId] = setTimeout(async () => {
+
+			if (deviceId != 'all') { // Only refresh values of device
+
+				await this.deviceStatus(deviceId);
+
+			} else { // Refresh all  devices
+				await this.loadDevices();
 			}
-			watchdogTimer[`all`] = setTimeout(async () => {
 
-				if (this.devices.length > 0) {
+		}, (intervallTimer));
+	}
 
-					for (const deviceId in this.devices) {
-						await this.deviceStatus(deviceId);
-					}
+	/**
+	 * Define proper intervall time for selected device type
+	 *
+	 * @param {string} [deviceId] - deviceId of SwitchBot device
+	 */
+	defineIntervallTime(deviceId){
+		let timeInMs = 3600000; //  Default to 1 hour
 
-			} else { // Devices not loaded, request all
-					await this.loadDevices();
-			}
+		if (!this.devices[deviceId] || !this.devices[deviceId].deviceType) return;
 
-		}, (this.config.intervall * 60000));
+		switch (this.devices[deviceId].deviceType) {
+			case ('Plug'):
+				timeInMs = intervallSettings.Plug;
+				break;
+			case ('Curtain'):
+				timeInMs = intervallSettings.Curtain;
+				break;
+			case ('Meter'):
+				timeInMs = intervallSettings.Meter;
+				break;
+			case ('Humidifier'):
+				timeInMs = intervallSettings.Humidifier;
+				break;
+			case ('Smart Fan'):
+				timeInMs = intervallSettings.SmartFan;
+				break;
+		}
+		this.devices[deviceId].intervallTimer = timeInMs;
 	}
 
 	/**
@@ -79,10 +141,10 @@ class SwitchbotHub extends utils.Adapter {
 	 */
 	onUnload(callback) {
 		try {
-			for (const device in watchdogTimer) {
-				if (watchdogTimer[device]) {
-					clearTimeout(watchdogTimer[device]);
-					delete watchdogTimer[device];
+			for (const device in dataRefreshTimer) {
+				if (dataRefreshTimer[device]) {
+					clearTimeout(dataRefreshTimer[device]);
+					delete dataRefreshTimer[device];
 				}
 			}
 			// Reset the connection indicator during startup
@@ -167,15 +229,30 @@ class SwitchbotHub extends utils.Adapter {
 					switch (deviceArray[device].deviceType) {
 
 						case ('Bot'):
-							await this.stateSetCreate(`${deviceArray[device].deviceId}.press`, `press`, '');
-							await this.stateSetCreate(`${deviceArray[device].deviceId}.state`, `ON/OFF`, '');
+							await this.stateSetCreate(`${deviceArray[device].deviceId}.press`, `press`, null);
+							await this.stateSetCreate(`${deviceArray[device].deviceId}.state`, `ON/OFF`, null);
 							break;
 
 					}
 
-					// Request device status
+					// Request device values
 					this.log.debug(`[deviceStatus for ]: ${JSON.stringify(this.devices[device])}`);
 					await this.deviceStatus(deviceArray[device].deviceId);
+
+					// Define intervall time (only if device has states)
+					if (this.devices[deviceArray[device].deviceId] && this.devices[deviceArray[device].deviceId].states) {
+
+						try {
+							await this.defineIntervallTime(deviceArray[device].deviceId);
+						} catch (e) {
+							this.log.error(`Cannot process intervall timer definition ${e}`);
+						}
+
+
+					}
+
+					// Start polling intervall for specific device
+					await this.dataRefresh(deviceArray[device].deviceId);
 
 				}
 			};
@@ -184,7 +261,6 @@ class SwitchbotHub extends utils.Adapter {
 			const infraredRemoteList = apiResponse.body.infraredRemoteList;
 
 			this.log.info(`Connected to SwitchBot API found ${deviceList.length} devices`);
-			this.log.info(`Will refresh states every ${this.config.intervall} Minutes`);
 
 			try {
 				if (deviceList != null) {
@@ -194,7 +270,7 @@ class SwitchbotHub extends utils.Adapter {
 				}
 
 				if (infraredRemoteList != null) {
-					await arrayHandler(infraredRemoteList);
+					// await arrayHandler(infraredRemoteList);
 				} else {
 					this.log.error(`Can not handle infrared remote list from SwitchBot API`);
 				}
@@ -204,7 +280,7 @@ class SwitchbotHub extends utils.Adapter {
 			}
 
 			this.log.info(`All devices and values loaded, adapter ready`);
-			this.log.debug(`All devices and states : ${JSON.stringify(this.devices)}`);
+			this.log.debug(`All devices configuration data : ${JSON.stringify(this.devices)}`);
 
 		} catch (error) {
 			this.log.error(`Get/update of devices failed : ${error}`);
@@ -222,9 +298,9 @@ class SwitchbotHub extends utils.Adapter {
 
 			const apiResponse = await this.apiCall(`/v1.0/devices/${deviceId}/status`);
 			const devicesValues = apiResponse.body;
-			this.log.debug(`[deviceStatus apiResponse ]: ${JSON.stringify(this.devices[apiResponse])}`);
-			if (!devicesValues) {
-				this.log.error(`Empty status list received, cannot process`);
+			this.log.debug(`[deviceStatus apiResponse ]: ${JSON.stringify(apiResponse)}`);
+			if (!devicesValues || Object.keys(devicesValues).length === 0) {
+				this.log.debug(`No States found for type ${this.devices[deviceId].deviceType}`);
 				return;
 			}
 			this.devices[deviceId].states = {};
