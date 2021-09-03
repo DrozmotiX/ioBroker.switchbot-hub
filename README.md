@@ -16,7 +16,7 @@
 This adapter allows you to control your all devices connected to your SwitchBot hub by cloud API
 
 <span style="color:red">**** Early Alpha status at 0.0.1, only install for development/testing purposes !
-</span>.
+</span>
 
 ## Getting Started
 Please follow these  steps to get your Open Token!
@@ -61,17 +61,17 @@ To avoid reaching the limit to soon, proper intervall time must be defined durin
 
 ### Support Physical devices
 
-| Device Type | Supported | Tested |
-| ---------- | ------------ | ------------ |
-| Hub | Yes | No |
-| Hub Plus | Yes | No |
-| Hub Mini | Yes | Yes |
-| Bot (MUST enable Cloud Service first) | Yes | No |
-| Curtain (MUST enable Cloud Service first) | Yes | Yes |
-| Plug | Yes | No |
-| Meter | Yes | No |
-| Humidifier | Yes | No |
-| Smart Fan | Yes | No |
+| Device Type | Supported | Control Possible | Tested |
+| ---------- | ------------ | ------------ | ------------ |
+| Hub | Yes | No | No |
+| Hub Plus | Yes | No | No |
+| Hub Mini | Yes | Yes | No |
+| Bot (MUST enable Cloud Service first) | Yes | Yes | Yes |
+| Curtain (MUST enable Cloud Service first) | Yes | Yes | Yes |
+| Plug | Yes | No | No |
+| Meter | Yes | No | No |
+| Humidifier | Yes | No | No |
+| Smart Fan | Yes | No | No |
 
 ### Support Virtual infrared remote devices
 Virtual infrared remote devices refer to virtual devices that are used to simulate infrared signals of a home appliance remote control. A SwitchBot Hub Plus / Hub Mini is required in order to be able to create these virtual devices within the app.
@@ -121,7 +121,7 @@ If you like my work, please feel free to provide a personal donation
 (this is a personal Donate link for DutchmanNL, no relation to the ioBroker Project !)  
 [![Donate](https://raw.githubusercontent.com/DrozmotiX/ioBroker.switchbot-hub/main/admin/button.png)](http://paypal.me/DutchmanNL)
 
-### **WORK IN PROGRESS**
+### 0.1.0 (2021-09-03)
 * (Dutchman) Initial alpha release, Physical devices implemented
 * (Dutchman) Only curtains and SwitchBots can be controlled currently
 
