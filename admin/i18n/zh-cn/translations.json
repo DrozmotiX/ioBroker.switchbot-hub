@@ -1,4 +1,5 @@
 {
+    "Admin < 5 not supported, please update to use this adapter.": "不支持 Admin < 5，请更新以使用此适配器。",
     "Choose your preferred refresh intervall times in minutes, please note the API limit ! (See Readme)": "以分钟为单位选择您喜欢的刷新间隔时间，请注意 API 限制！ ",
     "Generate an Open Token within the app": "在应用程序中生成一个开放令牌",
     "Please provide your token": "请提供您的令牌",
