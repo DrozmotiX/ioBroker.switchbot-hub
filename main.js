@@ -8,6 +8,7 @@
 // you need to create an adapter
 const utils = require('@iobroker/adapter-core');
 const stateAttr = require(`${__dirname}/lib/state_attr.js`); // Load attribute library
+const irDeviceButtons = require(`${__dirname}/lib/irRemoteDevices.js`); // Load irRemote Button definitions
 const {default: axios} = require('axios');
 
 // const stateExpire = {}; // Array containing all times for online state expire
