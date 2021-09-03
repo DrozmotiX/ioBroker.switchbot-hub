@@ -219,6 +219,14 @@ class SwitchbotHub extends utils.Adapter {
 						native: {},
 					});
 
+					await this.extendObjectAsync(`${deviceArray[device].deviceId}._info`, {
+						type: 'channel',
+						common: {
+							name: `Device Information`
+						},
+						native: {},
+					});
+
 					//ToDo: consider to remove this channel or make optional
 					// Write info data of device to states
 					for (const infoState in deviceArray[device]) {
@@ -270,7 +278,7 @@ class SwitchbotHub extends utils.Adapter {
 				}
 
 				if (infraredRemoteList != null) {
-					// await arrayHandler(infraredRemoteList);
+					await this.infraredRemoteDevices(infraredRemoteList);
 				} else {
 					this.log.error(`Can not handle infrared remote list from SwitchBot API`);
 				}
@@ -298,7 +306,7 @@ class SwitchbotHub extends utils.Adapter {
 
 			const apiResponse = await this.apiCall(`/v1.0/devices/${deviceId}/status`);
 			const devicesValues = apiResponse.body;
-			this.log.debug(`[deviceStatus apiResponse ]: ${JSON.stringify(apiResponse)}`);
+			th	is.log.debug(`[deviceStatus apiResponse ]: ${JSON.stringify(apiResponse)}`);
 			if (!devicesValues || Object.keys(devicesValues).length === 0) {
 				this.log.debug(`No States found for type ${this.devices[deviceId].deviceType}`);
 				return;
@@ -313,6 +321,34 @@ class SwitchbotHub extends utils.Adapter {
 
 		} catch (error) {
 			this.log.error(`Cannot get/update status of ${this.devices[deviceId].deviceName} ${error}`);
+		}
+	}
+
+	async infraredRemoteDevices(remoteArray) {
+		for (const remoteControl in remoteArray) {
+			this.devices[remoteArray[remoteControl].deviceId] = remoteArray[remoteControl];
+			await this.extendObjectAsync(remoteArray[remoteControl].deviceId, {
+				type: 'device',
+				common: {
+					name: remoteArray[remoteControl].deviceName
+				},
+				native: {},
+			});
+
+			// Write info data of device to states
+			for (const infoState in remoteArray[remoteControl]) {
+				await this.stateSetCreate(`${remoteArray[remoteControl].deviceId}._info.${infoState}`, infoState, remoteArray[remoteControl][infoState]);
+			}
+
+			// // Create states not provided by API (no get, post  only)
+			switch (remoteArray[remoteControl].remoteType) {
+
+				case ('Air Conditioner'):
+
+					break;
+
+			}
+
 		}
 	}
 
