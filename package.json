@@ -1,6 +1,6 @@
 {
   "name": "iobroker.switchbot-hub",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "This adapter allows you to control your all devices connected to you SwitchBot hub by cloud API",
   "author": {
     "name": "DutchmanNL",

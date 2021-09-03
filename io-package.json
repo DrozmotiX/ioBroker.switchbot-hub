@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "switchbot-hub",
-        "version": "0.1.1",
+        "version": "0.1.2",
         "news": {
+            "0.1.2": {
+                "en": "Sentry error reporting implemented",
+                "de": "Sentry-Fehlerberichterstattung implementiert",
+                "ru": "Реализован сторожевой отчет об ошибках",
+                "pt": "Relatório de erro de sentinela implementado",
+                "nl": "Rapportage van Sentry-fouten geïmplementeerd",
+                "fr": "Rapport d'erreur Sentry mis en œuvre",
+                "it": "Segnalazione errori sentinella implementata",
+                "es": "Informe de errores de centinela implementado",
+                "pl": "Wdrożono raportowanie błędów Sentry",
+                "zh-cn": "哨兵错误报告实施"
+            },
             "0.1.1": {
                 "en": "Support for IR remote of type Air Conditioner added",
                 "de": "Unterstützung für IR-Fernbedienung vom Typ Klimaanlage hinzugefügt",
