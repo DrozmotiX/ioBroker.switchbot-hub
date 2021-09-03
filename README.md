@@ -15,7 +15,7 @@
 
 This adapter allows you to control your all devices connected to your SwitchBot hub by cloud API
 
-<span style="color:red">**** Early Alpha status at 0.0.1, only install for development/testing purposes !
+<span style="color:red">**** Beta status at 0.1.x, only install for development/testing purposes !
 </span>
 
 ## Getting Started
@@ -60,7 +60,6 @@ To avoid reaching the limit to soon, proper intervall time must be defined durin
 [ ] Add support to control all physical devices (currently only curtain and bot are supported)
 
 ### Support Physical devices
-
 | Device Type | Supported | Control Possible | Tested |
 | ---------- | ------------ | ------------ | ------------ |
 | Hub | Yes | No | No |
