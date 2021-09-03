@@ -1,4 +1,5 @@
 {
+    "Admin < 5 not supported, please update to use this adapter.": "Beheerder < 5 niet ondersteund, update om deze adapter te gebruiken.",
     "Choose your preferred refresh intervall times in minutes, please note the API limit ! (See Readme)": "Kies de gewenste verversingsintervaltijden in minuten, let op de API-limiet! ",
     "Generate an Open Token within the app": "Genereer een Open Token in de app",
     "Please provide your token": "Geef uw token op",

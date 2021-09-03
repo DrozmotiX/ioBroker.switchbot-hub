@@ -1,4 +1,5 @@
 {
+    "Admin < 5 not supported, please update to use this adapter.": "Admin <5 não suportado, atualize para usar este adaptador.",
     "Choose your preferred refresh intervall times in minutes, please note the API limit ! (See Readme)": "Escolha o seu intervalo de atualização preferido em minutos, observe o limite da API! ",
     "Generate an Open Token within the app": "Gerar um token aberto dentro do aplicativo",
     "Please provide your token": "Forneça seu token",
