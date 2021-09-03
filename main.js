@@ -506,24 +506,25 @@ class SwitchbotHub extends utils.Adapter {
 			};
 
 			// Prepare data to submit API call
-			switch (deviceType) {
+			if (deviceType) { // State change regular device  detected
+				switch (deviceType) {
 
-				case ('Bot'):
+					case ('Bot'):
 
-					if (deviceArray[3] === 'press') {
-						apiData.command = `press`;
-						apiData.parameter = `default`;
-					} else if (deviceArray[3] === 'state') {
-						if (state.val) {
-							apiData.command = `turnOn`;
+						if (deviceArray[3] === 'press') {
+							apiData.command = `press`;
 							apiData.parameter = `default`;
-						} else {
-							apiData.command = `turnOff`;
-							apiData.parameter = `default`;
+						} else if (deviceArray[3] === 'state') {
+							if (state.val) {
+								apiData.command = `turnOn`;
+								apiData.parameter = `default`;
+							} else {
+								apiData.command = `turnOff`;
+								apiData.parameter = `default`;
+							}
 						}
-					}
 
-					break;
+						break;
 
 					case ('Curtain'):
 						apiData.command = `setPosition`;
@@ -531,19 +532,50 @@ class SwitchbotHub extends utils.Adapter {
 						break;
 
 					case ('Humidifier'):
-					//ToDo: add proper definitions and values
-					break;
+						//ToDo: add proper definitions and values
+						break;
 
-				case ('Plug'):
-					//ToDo: add proper definitions and values
-					break;
+					case ('Plug'):
+						//ToDo: add proper definitions and values
+						break;
 
-				case ('Smart Fan'):
-					//ToDo: add proper definitions and values
-					break;
+					case ('Smart Fan'):
+						//ToDo: add proper definitions and values
+						break;
 
-				default:
+					default:
 
+				}
+			} else { // State change of IR Remote  detected
+				apiData.parameter = `default`;
+				switch (deviceArray[3]) {
+
+					case ('turnOn'):
+						apiData.command = `turnOn`;
+						break;
+
+					case ('turnOff'):
+						apiData.command = `turnOff`;
+						break;
+
+				}
+
+				if (deviceArray[3] === 'temperature'
+					|| deviceArray[3] === 'mode'
+					|| deviceArray[3] === 'fan_speed'
+					|| deviceArray[3] === 'power_state'
+				){
+					this.log.error(`Command ${deviceArray[3]} not (yet) implemented`);
+					return;
+					//ToDo: Define routine to have correct state values
+					// apiData.command = `setAll`;
+					// apiData.parameter = `{
+					// 	temperature : ${},
+					// 	mode : ${},
+					// 	fan speed : ${},
+					// 	power state : ${},
+					// }`
+				}
 			}
 
 			// Make API call
