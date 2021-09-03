@@ -8,6 +8,7 @@
 // you need to create an adapter
 const utils = require('@iobroker/adapter-core');
 const stateAttr = require(`${__dirname}/lib/state_attr.js`); // Load attribute library
+const irDeviceButtons = require(`${__dirname}/lib/irRemoteDevices.js`); // Load irRemote Button definitions
 const {default: axios} = require('axios');
 
 // const stateExpire = {}; // Array containing all times for online state expire
@@ -219,6 +220,14 @@ class SwitchbotHub extends utils.Adapter {
 						native: {},
 					});
 
+					await this.extendObjectAsync(`${deviceArray[device].deviceId}._info`, {
+						type: 'channel',
+						common: {
+							name: `Device Information`
+						},
+						native: {},
+					});
+
 					//ToDo: consider to remove this channel or make optional
 					// Write info data of device to states
 					for (const infoState in deviceArray[device]) {
@@ -270,7 +279,7 @@ class SwitchbotHub extends utils.Adapter {
 				}
 
 				if (infraredRemoteList != null) {
-					// await arrayHandler(infraredRemoteList);
+					await this.infraredRemoteDevices(infraredRemoteList);
 				} else {
 					this.log.error(`Can not handle infrared remote list from SwitchBot API`);
 				}
@@ -313,6 +322,61 @@ class SwitchbotHub extends utils.Adapter {
 
 		} catch (error) {
 			this.log.error(`Cannot get/update status of ${this.devices[deviceId].deviceName} ${error}`);
+		}
+	}
+
+	async infraredRemoteDevices(remoteArray) {
+		for (const remoteControl in remoteArray) {
+			this.devices[remoteArray[remoteControl].deviceId] = remoteArray[remoteControl];
+			await this.extendObjectAsync(remoteArray[remoteControl].deviceId, {
+				type: 'device',
+				common: {
+					name: remoteArray[remoteControl].deviceName
+				},
+				native: {},
+			});
+
+			// Write info data of device to states
+			for (const infoState in remoteArray[remoteControl]) {
+				await this.stateSetCreate(`${remoteArray[remoteControl].deviceId}._info.${infoState}`, infoState, remoteArray[remoteControl][infoState]);
+			}
+
+			// Get all required IR buttons from Library
+			if (!irDeviceButtons[remoteArray[remoteControl].remoteType]){
+				this.log.error(`IR Remote Type ${[remoteArray[remoteControl].remoteType]} not yet implemented`);
+			}
+
+			const allIrButtons = irDeviceButtons[remoteArray[remoteControl].remoteType];
+
+			// Add default buttons if IR type !== Others
+			if (remoteArray[remoteControl].remoteType !== 'Others'){
+				allIrButtons.turnOn = {name: 'Turn device On'};
+				allIrButtons.turnOff = {name: 'Turn device Off'};
+			}
+
+			// Create IR specific channels
+			for (const irButton in allIrButtons) {
+
+				const common = {
+					name: allIrButtons[irButton].name,
+					type: allIrButtons[irButton]!== undefined ? allIrButtons[irButton].type || 'number' : 'number',
+					role: allIrButtons[irButton]!== undefined ? allIrButtons[irButton].type || 'button' : 'button',
+					write: true,
+				};
+
+				if (allIrButtons[irButton].states){
+					common.states = allIrButtons[irButton].states;
+				}
+				if (allIrButtons[irButton].def){
+					common.def = allIrButtons[irButton].def;
+				}
+				const stateName = irButton.replace(' ', '_');
+				await this.extendObjectAsync(`${remoteArray[remoteControl].deviceId}.${stateName}`, {
+					type: 'state',
+					common
+				});
+				this.subscribeStates(`${remoteArray[remoteControl].deviceId}.${stateName}`);
+			}
 		}
 	}
 
@@ -442,45 +506,76 @@ class SwitchbotHub extends utils.Adapter {
 			};
 
 			// Prepare data to submit API call
-			switch (deviceType) {
+			if (deviceType) { // State change regular device  detected
+				switch (deviceType) {
 
-				case ('Bot'):
+					case ('Bot'):
 
-					if (deviceArray[3] === 'press') {
-						apiData.command = `press`;
-						apiData.parameter = `default`;
-					} else if (deviceArray[3] === 'state') {
-						if (state.val) {
-							apiData.command = `turnOn`;
+						if (deviceArray[3] === 'press') {
+							apiData.command = `press`;
 							apiData.parameter = `default`;
-						} else {
-							apiData.command = `turnOff`;
-							apiData.parameter = `default`;
+						} else if (deviceArray[3] === 'state') {
+							if (state.val) {
+								apiData.command = `turnOn`;
+								apiData.parameter = `default`;
+							} else {
+								apiData.command = `turnOff`;
+								apiData.parameter = `default`;
+							}
 						}
-					}
 
-					break;
+						break;
 
-				case ('Curtain'):
-					apiData.command = `setPosition`;
-					apiData.parameter = `0,ff,${state.val}`;
+					case ('Curtain'):
+						apiData.command = `setPosition`;
+						apiData.parameter = `0,ff,${state.val}`;
+						break;
 
-					break;
+					case ('Humidifier'):
+						//ToDo: add proper definitions and values
+						break;
 
-				case ('Humidifier'):
-					//ToDo: add proper definitions and values
-					break;
+					case ('Plug'):
+						//ToDo: add proper definitions and values
+						break;
 
-				case ('Plug'):
-					//ToDo: add proper definitions and values
-					break;
+					case ('Smart Fan'):
+						//ToDo: add proper definitions and values
+						break;
 
-				case ('Smart Fan'):
-					//ToDo: add proper definitions and values
-					break;
+					default:
 
-				default:
+				}
+			} else { // State change of IR Remote  detected
+				apiData.parameter = `default`;
+				switch (deviceArray[3]) {
 
+					case ('turnOn'):
+						apiData.command = `turnOn`;
+						break;
+
+					case ('turnOff'):
+						apiData.command = `turnOff`;
+						break;
+
+				}
+
+				if (deviceArray[3] === 'temperature'
+					|| deviceArray[3] === 'mode'
+					|| deviceArray[3] === 'fan_speed'
+					|| deviceArray[3] === 'power_state'
+				){
+					this.log.error(`Command ${deviceArray[3]} not (yet) implemented`);
+					return;
+					//ToDo: Define routine to have correct state values
+					// apiData.command = `setAll`;
+					// apiData.parameter = `{
+					// 	temperature : ${},
+					// 	mode : ${},
+					// 	fan speed : ${},
+					// 	power state : ${},
+					// }`
+				}
 			}
 
 			// Make API call
