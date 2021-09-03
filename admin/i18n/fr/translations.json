@@ -1,0 +1,14 @@
+{
+    "Choose your preferred refresh intervall times in minutes, please note the API limit ! (See Readme)": "Choisissez vos intervalles de rafraîchissement préférés en minutes, veuillez noter la limite de l'API ! ",
+    "Generate an Open Token within the app": "Générer un jeton ouvert dans l'application",
+    "Please provide your token": "Veuillez fournir votre jeton",
+    "Please use the Switchbot App to get your token, got to settings and tap 10 times on app version to generate it!": "Veuillez utiliser l'application Switchbot pour obtenir votre jeton, accédez aux paramètres et appuyez 10 fois sur la version de l'application pour le générer !",
+    "Refresh Curtain values": "Actualiser les valeurs du rideau",
+    "Refresh Humidifier values": "Rafraîchir les valeurs de l'humidificateur",
+    "Refresh Meter values": "Rafraîchir les valeurs du compteur",
+    "Refresh Plug values": "Rafraîchir les valeurs du plug",
+    "Refresh Smart Fan values": "Actualiser les valeurs Smart Fan",
+    "Refresh all devices and values": "Actualiser tous les appareils et valeurs",
+    "number": "numéro",
+    "switchbot-hub adapter settings": "Paramètres de l'adaptateur pour Switchbot-Hub"
+}

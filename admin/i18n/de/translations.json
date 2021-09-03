@@ -1,0 +1,14 @@
+{
+    "Choose your preferred refresh intervall times in minutes, please note the API limit ! (See Readme)": "Wählen Sie Ihr bevorzugtes Aktualisierungsintervall in Minuten, beachten Sie bitte das API-Limit ! ",
+    "Generate an Open Token within the app": "Generiere einen Open Token in der App",
+    "Please provide your token": "Bitte geben Sie Ihren Token an",
+    "Please use the Switchbot App to get your token, got to settings and tap 10 times on app version to generate it!": "Bitte verwenden Sie die Switchbot-App, um Ihren Token zu erhalten, rufen Sie die Einstellungen auf und tippen Sie 10 Mal auf die App-Version, um diesen zu generieren!",
+    "Refresh Curtain values": "Vorhangwerte aktualisieren",
+    "Refresh Humidifier values": "Befeuchterwerte aktualisieren",
+    "Refresh Meter values": "Zählerwerte aktualisieren",
+    "Refresh Plug values": "Plug-Werte aktualisieren",
+    "Refresh Smart Fan values": "Smart Fan-Werte aktualisieren",
+    "Refresh all devices and values": "Alle Geräte und Werte aktualisieren",
+    "number": "Nummer",
+    "switchbot-hub adapter settings": "Adaptereinstellungen für Switchbot-Hub"
+}

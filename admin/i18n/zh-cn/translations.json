@@ -1,0 +1,14 @@
+{
+    "Choose your preferred refresh intervall times in minutes, please note the API limit ! (See Readme)": "以分钟为单位选择您喜欢的刷新间隔时间，请注意 API 限制！ ",
+    "Generate an Open Token within the app": "在应用程序中生成一个开放令牌",
+    "Please provide your token": "请提供您的令牌",
+    "Please use the Switchbot App to get your token, got to settings and tap 10 times on app version to generate it!": "请使用 Switchbot 应用程序获取您的令牌，进入设置并在应用程序版本上点击 10 次以生成它！",
+    "Refresh Curtain values": "刷新窗帘值",
+    "Refresh Humidifier values": "刷新加湿器值",
+    "Refresh Meter values": "刷新仪表值",
+    "Refresh Plug values": "刷新插头值",
+    "Refresh Smart Fan values": "刷新智能风扇值",
+    "Refresh all devices and values": "刷新所有设备和值",
+    "number": "数字",
+    "switchbot-hub adapter settings": "Switchbot-Hub 的适配器设置"
+}

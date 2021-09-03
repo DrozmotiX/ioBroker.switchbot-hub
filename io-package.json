@@ -1,111 +1,111 @@
 {
-	"common": {
-		"name": "switchbot-hub",
-		"version": "0.0.1",
-		"news": {
-			"0.0.1": {
-				"en": "initial release",
-				"de": "Erstveröffentlichung",
-				"ru": "Начальная версия",
-				"pt": "lançamento inicial",
-				"nl": "Eerste uitgave",
-				"fr": "Première version",
-				"it": "Versione iniziale",
-				"es": "Versión inicial",
-				"pl": "Pierwsze wydanie",
-				"zh-cn": "首次出版"
-			}
-		},
-		"titleLang": {
-			"en": "SwitchBot-Hub",
-			"de": "SwitchBot-Hub",
-			"ru": "SwitchBot-Hub",
-			"pt": "SwitchBot-Hub",
-			"nl": "SwitchBot-Hub",
-			"fr": "SwitchBot-Hub",
-			"it": "SwitchBot-Hub",
-			"es": "SwitchBot-Hub",
-			"pl": "SwitchBot-Hub",
-			"zh-cn": "SwitchBot-Hub"
-		},
-		"desc": {
-			"en": "This adapter allows you to control your all devices connected to you SwitchBot hub by cloud API",
-			"de": "Mit diesem Adapter können Sie alle mit Ihrem SwitchBot-Hub verbundenen Geräte über die Cloud-API steuern",
-			"ru": "Этот адаптер позволяет управлять всеми устройствами, подключенными к концентратору SwitchBot с помощью облачного API.",
-			"pt": "Este adaptador permite que você controle todos os seus dispositivos conectados ao hub SwitchBot por API em nuvem",
-			"nl": "This adapter allows you to control your all devices connected to you SwitchBot hub by cloud API",
-			"fr": "Cet adaptateur vous permet de contrôler tous vos appareils connectés à votre hub SwitchBot par l'API cloud",
-			"it": "Questo adattatore ti consente di controllare tutti i dispositivi collegati all'hub SwitchBot tramite API cloud",
-			"es": "Este adaptador le permite controlar todos sus dispositivos conectados a su concentrador SwitchBot mediante API en la nube",
-			"pl": "Ten adapter umożliwia sterowanie wszystkimi urządzeniami podłączonymi do koncentratora SwitchBot przez API w chmurze",
-			"zh-cn": "此适配器允许您通过云 API 控制连接到 SwitchBot 集线器的所有设备"
-		},
-		"authors": [
-			"DutchmanNL <oss@drozmotix.eu>"
-		],
-		"keywords": [
-			"SwitchBot",
-			"ioBroker",
-			"iOT",
-			"SmartHome"
-		],
-		"license": "MIT",
-		"platform": "Javascript/Node.js",
-		"main": "main.js",
-		"icon": "switchbot-hub.png",
-		"enabled": true,
-		"extIcon": "https://raw.githubusercontent.com/DrozmotiX/ioBroker.switchbot-hub/master/admin/switchbot-hub.png",
-		"readme": "https://github.com/DrozmotiX/ioBroker.switchbot-hub/blob/master/README.md",
-		"loglevel": "info",
-		"mode": "daemon",
-		"type": "hardware",
-		"compact": true,
-		"connectionType": "cloud",
-		"dataSource": "poll",
-		"materialize": true,
-		"dependencies": [
-			{
-				"js-controller": ">=2.0.0"
-			}
-		],
-		"adminUI": {
-			"config": "json"
-		}
-	},
-	"encryptedNative": [
-		"openToken"
-	],
-	"native": {
-		"openToken": "",
-		"intervallAll": 60,
-		"intervallCurtain": 30,
-		"intervallHumidifier": 7,
-		"intervallMeter": 7,
-		"intervallPlug": 30,
-		"intervallSmartFan": 30
-	},
-	"objects": [],
-	"instanceObjects": [
-		{
-			"_id": "info",
-			"type": "channel",
-			"common": {
-				"name": "Information"
-			},
-			"native": {}
-		},
-		{
-			"_id": "info.connection",
-			"type": "state",
-			"common": {
-				"role": "indicator.connected",
-				"name": "Device or service connected",
-				"type": "boolean",
-				"read": true,
-				"write": false,
-				"def": false
-			},
-			"native": {}
-		}
-	]
+    "common": {
+        "name": "switchbot-hub",
+        "version": "0.0.1",
+        "news": {
+            "0.0.1": {
+                "en": "initial release",
+                "de": "Erstveröffentlichung",
+                "ru": "Начальная версия",
+                "pt": "lançamento inicial",
+                "nl": "Eerste uitgave",
+                "fr": "Première version",
+                "it": "Versione iniziale",
+                "es": "Versión inicial",
+                "pl": "Pierwsze wydanie",
+                "zh-cn": "首次出版"
+            }
+        },
+        "titleLang": {
+            "en": "SwitchBot-Hub",
+            "de": "SwitchBot-Hub",
+            "ru": "SwitchBot-Hub",
+            "pt": "SwitchBot-Hub",
+            "nl": "SwitchBot-Hub",
+            "fr": "SwitchBot-Hub",
+            "it": "SwitchBot-Hub",
+            "es": "SwitchBot-Hub",
+            "pl": "SwitchBot-Hub",
+            "zh-cn": "SwitchBot-Hub"
+        },
+        "desc": {
+            "en": "This adapter allows you to control your all devices connected to you SwitchBot hub by cloud API",
+            "de": "Mit diesem Adapter können Sie alle mit Ihrem SwitchBot-Hub verbundenen Geräte über die Cloud-API steuern",
+            "ru": "Этот адаптер позволяет управлять всеми устройствами, подключенными к концентратору SwitchBot с помощью облачного API.",
+            "pt": "Este adaptador permite que você controle todos os seus dispositivos conectados ao hub SwitchBot por API em nuvem",
+            "nl": "This adapter allows you to control your all devices connected to you SwitchBot hub by cloud API",
+            "fr": "Cet adaptateur vous permet de contrôler tous vos appareils connectés à votre hub SwitchBot par l'API cloud",
+            "it": "Questo adattatore ti consente di controllare tutti i dispositivi collegati all'hub SwitchBot tramite API cloud",
+            "es": "Este adaptador le permite controlar todos sus dispositivos conectados a su concentrador SwitchBot mediante API en la nube",
+            "pl": "Ten adapter umożliwia sterowanie wszystkimi urządzeniami podłączonymi do koncentratora SwitchBot przez API w chmurze",
+            "zh-cn": "此适配器允许您通过云 API 控制连接到 SwitchBot 集线器的所有设备"
+        },
+        "authors": [
+            "DutchmanNL <oss@drozmotix.eu>"
+        ],
+        "keywords": [
+            "SwitchBot",
+            "ioBroker",
+            "iOT",
+            "SmartHome"
+        ],
+        "license": "MIT",
+        "platform": "Javascript/Node.js",
+        "main": "main.js",
+        "icon": "switchbot-hub.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/DrozmotiX/ioBroker.switchbot-hub/master/admin/switchbot-hub.png",
+        "readme": "https://github.com/DrozmotiX/ioBroker.switchbot-hub/blob/master/README.md",
+        "loglevel": "info",
+        "mode": "daemon",
+        "type": "hardware",
+        "compact": true,
+        "connectionType": "cloud",
+        "dataSource": "poll",
+        "materialize": true,
+        "dependencies": [
+            {
+                "js-controller": ">=2.0.0"
+            }
+        ],
+        "adminUI": {
+            "config": "json"
+        }
+    },
+    "encryptedNative": [
+        "openToken"
+    ],
+    "native": {
+        "openToken": "",
+        "intervallAll": 60,
+        "intervallCurtain": 30,
+        "intervallHumidifier": 7,
+        "intervallMeter": 7,
+        "intervallPlug": 30,
+        "intervallSmartFan": 30
+    },
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Information"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "Device or service connected",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        }
+    ]
 }

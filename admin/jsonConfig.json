@@ -5,8 +5,9 @@
     "_basicSettings": {
       "newLine": true,
       "type": "header",
-      "text": "Please provide your open token",
-      "sm": 12
+      "text": "Please provide your token",
+      "sm": 12,
+      "size": 5
     },
     "openToken": {
       "newLine": true,
@@ -14,6 +15,8 @@
       "visible": false,
       "type": "password",
       "label": "Generate an Open Token within the app",
+      "help": "Please use the Switchbot App to get your token, got to settings and tap 10 times on app version to generate it!",
+      "helpLink": "https://github.com/DrozmotiX/ioBroker.switchbot-hub/blob/main/README.md",
       "sm": 9
     },
       "_intervallSettings": {
