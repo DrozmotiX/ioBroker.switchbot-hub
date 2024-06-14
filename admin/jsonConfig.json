@@ -19,6 +19,14 @@
       "helpLink": "https://github.com/DrozmotiX/ioBroker.switchbot-hub/blob/main/README.md",
       "sm": 9
     },
+    "secretKey": {
+      "newLine": true,
+      "repeat": false,
+      "visible": false,
+      "type": "password",
+      "label": "Secret Key",
+      "sm": 9
+    },
       "_intervallSettings": {
         "newLine": true,
         "type": "header",
