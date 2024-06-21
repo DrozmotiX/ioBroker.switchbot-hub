@@ -223,15 +223,11 @@ class SwitchbotHub extends utils.Adapter {
 						}
 					});
 				});
-
 				req.on('error', error => {
 					reject(error);
 				});
-
 				req.end();
 			});
-
-
 		} else {
 			return new Promise((resolve, reject) => {
 				const req = https.request(options, res => {
