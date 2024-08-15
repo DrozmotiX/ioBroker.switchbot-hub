@@ -103,6 +103,10 @@ If you like my work, please feel free to provide a personal donation
 (this is a personal Donate link for DutchmanNL, no relation to the ioBroker Project !)  
 [![Donate](https://raw.githubusercontent.com/DrozmotiX/ioBroker.switchbot-hub/main/admin/button.png)](http://paypal.me/DutchmanNL)
 
+
+### coming soon
+* (arteck) api V1.1 
+
 ### 0.1.2 (2021-09-03)
 * (Dutchman) Sentry error reporting implemented
 

@@ -10,6 +10,10 @@ const utils = require('@iobroker/adapter-core');
 const stateAttr = require(`${__dirname}/lib/state_attr.js`); // Load attribute library
 const irDeviceButtons = require(`${__dirname}/lib/irRemoteDevices.js`); // Load irRemote Button definitions
 const {default: axios} = require('axios');
+const crypto = require('crypto');
+const https = require('https');
+const { TextDecoder } = require('util');
+
 
 const disableSentry = false; // Ensure to set to true during development !
 
@@ -172,38 +176,83 @@ class SwitchbotHub extends utils.Adapter {
 	 * Make API call to SwitchBot API and return response.
 	 * See documentation at https://github.com/OpenWonderLabs/SwitchBotAPI
 	 *
-	 * @param {string} [url] - Endpoint to handle API call, like `/v1.0/devices`
+	 * @param {string} [url] - Endpoint to handle API call, like `/v1.1/devices`
 	 * @param {object} [data] - Data for api post calls, if empty get will be executed
 	 */
 	apiCall(url, data) {
+		const ti = Date.now();
+		const dataIn = this.config.openToken + ti;
+		const signTerm = crypto.createHmac('sha256', this.config.secretKey)
+			.update(Buffer.from(dataIn, 'utf-8'))
+			.digest();
+		const sign = signTerm.toString("base64");
+		let methodSend = 'POST';
+		if (!data) {
+			methodSend = 'GET';
+		}
 
+		const options = {
+			hostname: 'api.switch-bot.com',
+			port: 443,
+			path: url,
+			method: methodSend,
+			headers: {
+				"Authorization": this.config.openToken,
+				"sign": sign,
+				"nonce": "",
+				"t": ti,
+				"Content-Type": "application/json; charset=utf8"
+			}
+		};
 		if (!url) throw new Error(`No URL provided, cannot make API call`);
 		if (!data) {
-			return axios(url, {
-				baseURL: 'https://api.switch-bot.com',
-				url: url,
-				timeout: 1000,
-				headers: {'Authorization': this.config.openToken}
-			})
-				.then(response => response.data)
-				.catch(error => {
-					throw new Error(`Cannot handle API call : ${error}`);
+			return new Promise((resolve, reject) => {
+				const req = https.request(options, res => {
+					let dataArray;
+
+					res.on('data', d => {
+						dataArray = d;
+					});
+
+					res.on('end', () => {
+						const out = new TextDecoder().decode(new Uint8Array(dataArray));
+						try {
+							resolve(JSON.parse(out));
+						} catch (err) {
+							reject(err);
+						}
+					});
+				});
+				req.on('error', error => {
+					reject(error);
+				});
+				req.end();
+			});
+		} else {
+			return new Promise((resolve, reject) => {
+				const req = https.request(options, res => {
+					let dataArray;
+
+					res.on('data', d => {
+						dataArray = d;
+					});
+
+					res.on('end', () => {
+						const out = new TextDecoder().decode(new Uint8Array(dataArray));
+						try {
+							resolve(JSON.parse(out));
+						} catch (err) {
+							reject(err);
+						}
+					});
 				});
 
-		} else {
-			return axios.post(url, data, {
-				baseURL: 'https://api.switch-bot.com',
-				url: url,
-				timeout: 1000,
-				headers: {
-					'Content-Type': 'application/json;charset=UTF-8',
-					'Authorization': this.config.openToken,
-				}
-			})
-				.then(response => response.data)
-				.catch(error => {
-					throw new Error(`Cannot handle API call : ${error}`);
+				req.on('error', error => {
+					reject(error);
 				});
+				req.write(data);
+				req.end();
+			});
 		}
 	}
 
@@ -212,7 +261,7 @@ class SwitchbotHub extends utils.Adapter {
 		try {
 
 			// Call API and get all devices
-			const apiResponse = await this.apiCall(`/v1.0/devices`);
+			const apiResponse = await this.apiCall(`/v1.1/devices`);
 			this.log.debug(`[getDevices API response]: ${JSON.stringify(apiResponse)}`);
 			if (!apiResponse) {
 				this.log.error(`Empty device list received, cannot process`);
@@ -303,7 +352,7 @@ class SwitchbotHub extends utils.Adapter {
 			this.log.debug(`All devices configuration data : ${JSON.stringify(this.devices)}`);
 
 		} catch (error) {
-			this.sendSentry(`[loadDevices]`, `${error}`);
+		//	this.sendSentry(`[loadDevices]`, `${error}`);
 			this.setState('info.connection', false, true);
 		}
 	}
@@ -316,7 +365,7 @@ class SwitchbotHub extends utils.Adapter {
 	async deviceStatus(deviceId) {
 		try {
 
-			const apiResponse = await this.apiCall(`/v1.0/devices/${deviceId}/status`);
+			const apiResponse = await this.apiCall(`/v1.1/devices/${deviceId}/status`);
 			const devicesValues = apiResponse.body;
 			this.log.debug(`[deviceStatus apiResponse ]: ${JSON.stringify(apiResponse)}`);
 			if (!devicesValues || Object.keys(devicesValues).length === 0) {
@@ -514,7 +563,7 @@ class SwitchbotHub extends utils.Adapter {
 				const deviceType = this.devices[deviceArray[2]].deviceType;
 
 				// Default configuration for SmartBot POST api
-				const apiURL = `/v1.0/devices/${deviceId}/commands`;
+				const apiURL = `/v1.1/devices/${deviceId}/commands`;
 				const apiData = {
 					'command': 'setAll',
 					'parameter': state.val,
