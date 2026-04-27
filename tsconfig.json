@@ -10,7 +10,7 @@
 		"checkJs": true,
 
 		"module": "commonjs",
-		"moduleResolution": "node",
+		"moduleResolution": "node16",
 		"esModuleInterop": true,
 		// this is necessary for the automatic typing of the adapter config
 		"resolveJsonModule": true,

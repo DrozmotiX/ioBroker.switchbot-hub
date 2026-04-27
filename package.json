@@ -34,6 +34,7 @@
     "@types/sinon": "^10.0.2",
     "@types/sinon-chai": "^3.2.5",
     "axios": "^0.21.1",
+    "canvas": "^2.11.2",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "eslint": "^7.32.0",
@@ -54,6 +55,9 @@
     "check": "tsc --noEmit -p tsconfig.check.json",
     "lint": "eslint",
     "release": "release-script"
+  },
+  "overrides": {
+    "canvas": "^2.11.2"
   },
   "bugs": {
     "url": "https://github.com/DrozmotiX/ioBroker.switchbot-hub/issues"
