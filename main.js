@@ -406,7 +406,7 @@ class SwitchbotHub extends utils.Adapter {
 					statusValue = this.normalizePowerValue(statusValue);
 				}
 
-				if (statusState === "switch1Status" || statusState === "switch2Status") {
+				if (statusState === "switch1Status" || statusState === "switch2Status" || statusState === "switchStatus") {
 					statusValue = this.normalizeSwitchValue(statusValue);
 				}
 
