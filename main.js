@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /*
  * Created with @ioBroker/create-adapter v1.34.1
@@ -6,14 +6,12 @@
 
 // The adapter-core module gives you access to the core ioBroker functions
 // you need to create an adapter
-const utils = require('@iobroker/adapter-core');
+const utils = require("@iobroker/adapter-core");
 const stateAttr = require(`${__dirname}/lib/state_attr.js`); // Load attribute library
 const irDeviceButtons = require(`${__dirname}/lib/irRemoteDevices.js`); // Load irRemote Button definitions
-const {default: axios} = require('axios');
-const crypto = require('crypto');
-const https = require('https');
-const { TextDecoder } = require('util');
-
+const crypto = require("crypto");
+const https = require("https");
+const { TextDecoder } = require("util");
 
 const disableSentry = false; // Ensure to set to true during development !
 
@@ -27,7 +25,12 @@ const intervallSettings = {
 	Meter: 7 * 60000,
 	Plug: 30 * 60000,
 	SmartFan: 30 * 60000,
+	SmartLock: 30 * 60000,
+	SmartLockUltra: 30 * 60000,
+	WaterDetector: 7 * 60000,
 };
+
+const API_REQUEST_TIMEOUT_MS = 15000;
 
 class SwitchbotHub extends utils.Adapter {
 
@@ -37,15 +40,16 @@ class SwitchbotHub extends utils.Adapter {
 	constructor(options) {
 		super({
 			...options,
-			name: 'switchbot-hub',
+			name: "switchbot-hub",
 		});
-		this.on('ready', this.onReady.bind(this));
-		this.on('stateChange', this.onStateChange.bind(this));
-		this.on('unload', this.onUnload.bind(this));
+		this.on("ready", this.onReady.bind(this));
+		this.on("stateChange", this.onStateChange.bind(this));
+		this.on("unload", this.onUnload.bind(this));
 
 		// Constructors keeping relevant information for data processing
 		this.devices = {};
 		this.createdStatesDetails = {};
+		this.isUnloading = false;
 	}
 
 	/**
@@ -54,11 +58,11 @@ class SwitchbotHub extends utils.Adapter {
 	async onReady() {
 
 		// Reset the connection indicator during startup
-		this.setState('info.connection', false, true);
+		this.setState("info.connection", false, true);
 
 		// Check if token is provided
 		if (!this.config.openToken) {
-			this.log.error('*** No token provided, Please enter your token in adapter settings !!!  ***');
+			this.log.error("*** No token provided, Please enter your token in adapter settings !!!  ***");
 		}
 
 		// Load intervall settings
@@ -68,6 +72,9 @@ class SwitchbotHub extends utils.Adapter {
 		intervallSettings.Meter = this.config.intervallMeter != null ? this.config.intervallMeter * 60000 || intervallSettings.Meter : intervallSettings.Meter;
 		intervallSettings.Plug = this.config.intervallPlug != null ? this.config.intervallPlug * 60000 || intervallSettings.Plug : intervallSettings.Plug;
 		intervallSettings.SmartFan = this.config.intervallSmartFan != null ? this.config.intervallSmartFan * 60000 || intervallSettings.SmartFan : intervallSettings.SmartFan;
+		intervallSettings.SmartLock = this.config.intervallSmartLock != null ? this.config.intervallSmartLock * 60000 || intervallSettings.SmartLock : intervallSettings.SmartLock;
+		intervallSettings.SmartLockUltra = this.config.intervallSmartLockUltra != null ? this.config.intervallSmartLockUltra * 60000 || intervallSettings.SmartLockUltra : intervallSettings.SmartLockUltra;
+		intervallSettings.WaterDetector = this.config.intervallWaterDetector != null ? this.config.intervallWaterDetector * 60000 || intervallSettings.WaterDetector : intervallSettings.WaterDetector;
 
 		// Request devices, create related objects and get all values
 		try {
@@ -76,17 +83,24 @@ class SwitchbotHub extends utils.Adapter {
 			this.log.error(`Init Error ${error}`);
 		}
 
-		// Start intervall to refresh all devices and data
-		await this.dataRefresh('all');
+		// Start interval to refresh all devices and data
+		await this.dataRefresh("all");
 
 	}
 
 	/**
-	 * Get & refresh all vales for specific device by intervall setting
+	 * Get & refresh all values for specific device by interval setting.
+	 *
+	 * Important:
+	 * - The next timer is always planned in finally.
+	 * - API failures therefore do not stop the polling loop.
+	 * - During unload no new timer is scheduled.
 	 *
 	 * @param {string} [deviceId] - deviceId of SwitchBot device
 	 */
-	async dataRefresh(deviceId){
+	async dataRefresh(deviceId) {
+
+		if (this.isUnloading) return;
 
 		let intervallTimer = intervallSettings.all;
 
@@ -94,58 +108,75 @@ class SwitchbotHub extends utils.Adapter {
 			intervallTimer = this.devices[deviceId].intervallTimer;
 		}
 
-		// Reset timer (if running) and start new one for next watchdog interval
+		// Reset timer if already running
 		if (dataRefreshTimer[deviceId]) {
 			clearTimeout(dataRefreshTimer[deviceId]);
 			dataRefreshTimer[deviceId] = null;
 		}
+
 		dataRefreshTimer[deviceId] = setTimeout(async () => {
-
-			if (deviceId !== 'all') { // Only refresh values of device
-
-				await this.deviceStatus(deviceId);
-
-			} else { // Refresh all  devices
-				await this.loadDevices();
+			try {
+				if (deviceId !== "all") {
+					await this.deviceStatus(deviceId);
+				} else {
+					await this.loadDevices();
+				}
+			} catch (error) {
+				this.sendSentry("[dataRefresh]", `${error}`);
+			} finally {
+				if (!this.isUnloading) {
+					await this.dataRefresh(deviceId);
+				}
 			}
-
-		}, (intervallTimer));
+		}, intervallTimer);
 	}
 
 	/**
-	 * Define proper intervall time for selected device type
+	 * Define proper interval time for selected device type
 	 *
 	 * @param {string} [deviceId] - deviceId of SwitchBot device
 	 */
-	defineIntervallTime(deviceId){
+	defineIntervallTime(deviceId) {
 
 		try {
-			let timeInMs = 3600000; //  Default to 1 hour
+			let timeInMs = intervallSettings.all;
 
 			if (!this.devices[deviceId] || !this.devices[deviceId].deviceType) return;
 
 			switch (this.devices[deviceId].deviceType) {
-				case ('Plug'):
+				case "Plug":
 					timeInMs = intervallSettings.Plug;
 					break;
-				case ('Curtain'):
+				case "Curtain":
 					timeInMs = intervallSettings.Curtain;
 					break;
-				case ('Meter'):
+				case "Meter":
 					timeInMs = intervallSettings.Meter;
 					break;
-				case ('Humidifier'):
+				case "Humidifier":
 					timeInMs = intervallSettings.Humidifier;
 					break;
-				case ('Smart Fan'):
+				case "Smart Fan":
 					timeInMs = intervallSettings.SmartFan;
+					break;
+				case "Smart Lock":
+					timeInMs = intervallSettings.SmartLock;
+					break;
+				case "Smart Lock Ultra":
+					timeInMs = intervallSettings.SmartLockUltra;
+					break;
+				case "Water Detector":
+					timeInMs = intervallSettings.WaterDetector;
+					break;
+				default:
+					timeInMs = intervallSettings.all;
 					break;
 			}
 			this.devices[deviceId].intervallTimer = timeInMs;
 
 		} catch (error) {
 
-			this.sendSentry(`[defineIntervallTime]`, `${error}`);
+			this.sendSentry("[defineIntervallTime]", `${error}`);
 
 		}
 	}
@@ -156,18 +187,20 @@ class SwitchbotHub extends utils.Adapter {
 	 */
 	onUnload(callback) {
 		try {
+			this.isUnloading = true;
+
 			for (const device in dataRefreshTimer) {
 				if (dataRefreshTimer[device]) {
 					clearTimeout(dataRefreshTimer[device]);
 					delete dataRefreshTimer[device];
 				}
 			}
-			// Reset the connection indicator during startup
-			this.setState('info.connection', false, true);
+
+			this.setState("info.connection", false, true);
 
 			callback();
 		} catch (e) {
-			this.sendSentry(`[onUnload]`, `${e}`);
+			this.sendSentry("[onUnload]", `${e}`);
 			callback();
 		}
 	}
@@ -176,84 +209,73 @@ class SwitchbotHub extends utils.Adapter {
 	 * Make API call to SwitchBot API and return response.
 	 * See documentation at https://github.com/OpenWonderLabs/SwitchBotAPI
 	 *
+	 * Important:
+	 * - Requests have a timeout.
+	 * - A hanging SwitchBot API request no longer blocks the refresh loop forever.
+	 *
 	 * @param {string} [url] - Endpoint to handle API call, like `/v1.1/devices`
-	 * @param {object} [data] - Data for api post calls, if empty get will be executed
+	 * @param {object|string} [data] - Data for api post calls, if empty get will be executed
 	 */
 	apiCall(url, data) {
+		if (!url) throw new Error("No URL provided, cannot make API call");
+
 		const ti = Date.now();
 		const dataIn = this.config.openToken + ti;
-		const signTerm = crypto.createHmac('sha256', this.config.secretKey)
-			.update(Buffer.from(dataIn, 'utf-8'))
+		const signTerm = crypto.createHmac("sha256", this.config.secretKey)
+			.update(Buffer.from(dataIn, "utf-8"))
 			.digest();
 		const sign = signTerm.toString("base64");
-		let methodSend = 'POST';
-		if (!data) {
-			methodSend = 'GET';
-		}
+		const methodSend = data ? "POST" : "GET";
 
 		const options = {
-			hostname: 'api.switch-bot.com',
+			hostname: "api.switch-bot.com",
 			port: 443,
 			path: url,
 			method: methodSend,
+			timeout: API_REQUEST_TIMEOUT_MS,
 			headers: {
-				"Authorization": this.config.openToken,
-				"sign": sign,
-				"nonce": "",
-				"t": ti,
+				Authorization: this.config.openToken,
+				sign,
+				nonce: "",
+				t: ti,
 				"Content-Type": "application/json; charset=utf8"
 			}
 		};
-		if (!url) throw new Error(`No URL provided, cannot make API call`);
-		if (!data) {
-			return new Promise((resolve, reject) => {
-				const req = https.request(options, res => {
-					let dataArray;
 
-					res.on('data', d => {
-						dataArray = d;
-					});
+		return new Promise((resolve, reject) => {
+			const req = https.request(options, res => {
+				const chunks = [];
 
-					res.on('end', () => {
-						const out = new TextDecoder().decode(new Uint8Array(dataArray));
-						try {
-							resolve(JSON.parse(out));
-						} catch (err) {
-							reject(err);
-						}
-					});
+				res.on("data", d => {
+					chunks.push(d);
 				});
-				req.on('error', error => {
-					reject(error);
+
+				res.on("end", () => {
+					const dataArray = Buffer.concat(chunks);
+					const out = new TextDecoder().decode(new Uint8Array(dataArray));
+
+					try {
+						resolve(JSON.parse(out));
+					} catch (err) {
+						reject(new Error(`Invalid JSON response from SwitchBot API: ${out}`));
+					}
 				});
-				req.end();
 			});
-		} else {
-			return new Promise((resolve, reject) => {
-				const req = https.request(options, res => {
-					let dataArray;
 
-					res.on('data', d => {
-						dataArray = d;
-					});
-
-					res.on('end', () => {
-						const out = new TextDecoder().decode(new Uint8Array(dataArray));
-						try {
-							resolve(JSON.parse(out));
-						} catch (err) {
-							reject(err);
-						}
-					});
-				});
-
-				req.on('error', error => {
-					reject(error);
-				});
-				req.write(data);
-				req.end();
+			req.on("timeout", () => {
+				req.destroy(new Error(`SwitchBot API request timed out after ${API_REQUEST_TIMEOUT_MS}ms: ${url}`));
 			});
-		}
+
+			req.on("error", error => {
+				reject(error);
+			});
+
+			if (data) {
+				req.write(typeof data === "string" ? data : JSON.stringify(data));
+			}
+
+			req.end();
+		});
 	}
 
 	// Load all device and their related states & values
@@ -261,19 +283,19 @@ class SwitchbotHub extends utils.Adapter {
 		try {
 
 			// Call API and get all devices
-			const apiResponse = await this.apiCall(`/v1.1/devices`);
+			const apiResponse = await this.apiCall("/v1.1/devices");
 			this.log.debug(`[getDevices API response]: ${JSON.stringify(apiResponse)}`);
 			if (!apiResponse) {
-				this.log.error(`Empty device list received, cannot process`);
+				this.log.error("Empty device list received, cannot process");
 				return;
 			}
-			this.setState('info.connection', true, true);
+			this.setState("info.connection", true, true);
 
 			const arrayHandler = async (deviceArray) => {
 				for (const device in deviceArray) {
 					this.devices[deviceArray[device].deviceId] = deviceArray[device];
 					await this.extendObjectAsync(deviceArray[device].deviceId, {
-						type: 'device',
+						type: "device",
 						common: {
 							name: deviceArray[device].deviceName
 						},
@@ -281,25 +303,30 @@ class SwitchbotHub extends utils.Adapter {
 					});
 
 					await this.extendObjectAsync(`${deviceArray[device].deviceId}._info`, {
-						type: 'channel',
+						type: "channel",
 						common: {
-							name: `Device Information`
+							name: "Device Information"
 						},
 						native: {},
 					});
 
-					//ToDo: consider to remove this channel or make optional
+					// ToDo: consider to remove this channel or make optional
 					// Write info data of device to states
 					for (const infoState in deviceArray[device]) {
 						await this.stateSetCreate(`${deviceArray[device].deviceId}._info.${infoState}`, infoState, deviceArray[device][infoState]);
 					}
 
-					// Create states not provided by API (no get, post  only)
+					// Create states not provided by API (no get, post only)
 					switch (deviceArray[device].deviceType) {
 
-						case ('Bot'):
-							await this.stateSetCreate(`${deviceArray[device].deviceId}.press`, `press`, null);
-							await this.stateSetCreate(`${deviceArray[device].deviceId}.state`, `ON/OFF`, null);
+						case "Bot":
+							await this.stateSetCreate(`${deviceArray[device].deviceId}.press`, "press", null);
+							await this.stateSetCreate(`${deviceArray[device].deviceId}.state`, "ON/OFF", null);
+							break;
+
+						case "Smart Lock":
+						case "Smart Lock Ultra":
+							await this.stateSetCreate(`${deviceArray[device].deviceId}.lock`, "lock", null);
 							break;
 
 					}
@@ -308,26 +335,22 @@ class SwitchbotHub extends utils.Adapter {
 					this.log.debug(`[deviceStatus for ]: ${JSON.stringify(this.devices[deviceArray[device].deviceId].deviceName)}`);
 					await this.deviceStatus(deviceArray[device].deviceId);
 
-					// Define intervall time (only if device has states)
-					if (this.devices[deviceArray[device].deviceId] && this.devices[deviceArray[device].deviceId].states) {
-
-						try {
-							await this.defineIntervallTime(deviceArray[device].deviceId);
-						} catch (e) {
-							this.log.error(`Cannot process intervall timer definition ${e}`);
-						}
-
-
+					// Define interval time if possible.
+					// Even if no states are available, keep a sane default instead of falling back unexpectedly.
+					try {
+						await this.defineIntervallTime(deviceArray[device].deviceId);
+					} catch (e) {
+						this.log.error(`Cannot process interval timer definition ${e}`);
 					}
 
-					// Start polling intervall for specific device
+					// Start polling interval for specific device
 					await this.dataRefresh(deviceArray[device].deviceId);
 
 				}
 			};
 
-			const deviceList = apiResponse.body.deviceList;
-			const infraredRemoteList = apiResponse.body.infraredRemoteList;
+			const deviceList = apiResponse.body && apiResponse.body.deviceList ? apiResponse.body.deviceList : [];
+			const infraredRemoteList = apiResponse.body && apiResponse.body.infraredRemoteList ? apiResponse.body.infraredRemoteList : [];
 
 			this.log.info(`Connected to SwitchBot API found ${deviceList.length} devices`);
 
@@ -335,30 +358,30 @@ class SwitchbotHub extends utils.Adapter {
 				if (deviceList) {
 					await arrayHandler(deviceList);
 				} else {
-					this.log.error(`Can not handle device list from SwitchBot API`);
+					this.log.error("Can not handle device list from SwitchBot API");
 				}
 
 				if (infraredRemoteList != null) {
 					await this.infraredRemoteDevices(infraredRemoteList);
 				} else {
-					this.log.error(`Can not handle infrared remote list from SwitchBot API`);
+					this.log.error("Can not handle infrared remote list from SwitchBot API");
 				}
 
 			} catch (error) {
-				this.sendSentry(`[arrayHandler]`, `${error}`);
+				this.sendSentry("[arrayHandler]", `${error}`);
 			}
 
-			this.log.info(`All devices and values loaded, adapter ready`);
+			this.log.info("All devices and values loaded, adapter ready");
 			this.log.debug(`All devices configuration data : ${JSON.stringify(this.devices)}`);
 
 		} catch (error) {
-		//	this.sendSentry(`[loadDevices]`, `${error}`);
-			this.setState('info.connection', false, true);
+			this.sendSentry("[loadDevices]", `${error}`);
+			this.setState("info.connection", false, true);
 		}
 	}
 
 	/**
-	 * Get all vales for specific device
+	 * Get all values for specific device
 	 *
 	 * @param {string} [deviceId] - deviceId of SwitchBot device
 	 */
@@ -376,12 +399,29 @@ class SwitchbotHub extends utils.Adapter {
 
 			// Write status data of device to states
 			for (const statusState in devicesValues) {
-				await this.stateSetCreate(`${deviceId}.${statusState}`, statusState, devicesValues[statusState]);
-				this.devices[deviceId].states[statusState] = devicesValues[statusState];
+				let statusValue = devicesValues[statusState];
+
+				// Relay Switch power is returned by SwitchBot as "on"/"off".
+				// ioBroker switch states should be boolean so the Objects UI can toggle properly.
+				if (
+					statusState === "power"
+					&& this.devices[deviceId]
+					&& ["Relay Switch 1PM", "Relay Switch 1", "Relay Switch 2PM"].includes(this.devices[deviceId].deviceType)
+				) {
+					statusValue = this.normalizePowerValue(statusValue);
+				}
+
+				if (statusState === "switch1Status" || statusState === "switch2Status" || statusState === "switchStatus") {
+					statusValue = this.normalizeSwitchValue(statusValue);
+				}
+
+				await this.stateSetCreate(`${deviceId}.${statusState}`, statusState, statusValue);
+				this.devices[deviceId].states[statusState] = statusValue;
 			}
 
 		} catch (error) {
-			this.sendSentry(`[deviceStatus]`, `${error}`);
+			this.sendSentry("[deviceStatus]", `${error}`);
+			throw error;
 		}
 	}
 
@@ -390,7 +430,7 @@ class SwitchbotHub extends utils.Adapter {
 			for (const remoteControl in remoteArray) {
 				this.devices[remoteArray[remoteControl].deviceId] = remoteArray[remoteControl];
 				await this.extendObjectAsync(remoteArray[remoteControl].deviceId, {
-					type: 'device',
+					type: "device",
 					common: {
 						name: remoteArray[remoteControl].deviceName
 					},
@@ -403,16 +443,17 @@ class SwitchbotHub extends utils.Adapter {
 				}
 
 				// Get all required IR buttons from Library
-				if (!irDeviceButtons[remoteArray[remoteControl].remoteType]){
+				if (!irDeviceButtons[remoteArray[remoteControl].remoteType]) {
 					this.log.error(`IR Remote Type ${[remoteArray[remoteControl].remoteType]} not yet implemented`);
+					continue;
 				}
 
 				const allIrButtons = irDeviceButtons[remoteArray[remoteControl].remoteType];
 
 				// Add default buttons if IR type !== Others
-				if (remoteArray[remoteControl].remoteType !== 'Others'){
-					allIrButtons.turnOn = {name: 'Turn device On'};
-					allIrButtons.turnOff = {name: 'Turn device Off'};
+				if (remoteArray[remoteControl].remoteType !== "Others") {
+					allIrButtons.turnOn = {name: "Turn device On"};
+					allIrButtons.turnOff = {name: "Turn device Off"};
 				}
 
 				// Create IR specific channels
@@ -420,27 +461,27 @@ class SwitchbotHub extends utils.Adapter {
 
 					const common = {
 						name: allIrButtons[irButton].name,
-						type: allIrButtons[irButton]!== undefined ? allIrButtons[irButton].type || 'number' : 'number',
-						role: allIrButtons[irButton]!== undefined ? allIrButtons[irButton].type || 'button' : 'button',
+						type: allIrButtons[irButton] !== undefined ? allIrButtons[irButton].type || "number" : "number",
+						role: allIrButtons[irButton] !== undefined ? allIrButtons[irButton].type || "button" : "button",
 						write: true,
 					};
 
-					if (allIrButtons[irButton].states){
+					if (allIrButtons[irButton].states) {
 						common.states = allIrButtons[irButton].states;
 					}
-					if (allIrButtons[irButton].def){
+					if (allIrButtons[irButton].def) {
 						common.def = allIrButtons[irButton].def;
 					}
-					const stateName = irButton.replace(' ', '_');
+					const stateName = irButton.replace(" ", "_");
 					await this.extendObjectAsync(`${remoteArray[remoteControl].deviceId}.${stateName}`, {
-						type: 'state',
+						type: "state",
 						common
 					});
 					this.subscribeStates(`${remoteArray[remoteControl].deviceId}.${stateName}`);
 				}
 			}
-		}catch (error) {
-			this.sendSentry(`[infraredRemoteDevices]`, `${error}`);
+		} catch (error) {
+			this.sendSentry("[infraredRemoteDevices]", `${error}`);
 		}
 	}
 
@@ -451,11 +492,11 @@ class SwitchbotHub extends utils.Adapter {
 	 * @param {object} value Value
 	 */
 	async stateSetCreate(stateName, name, value) {
-		this.log.debug('Create_state called for : ' + stateName + ' with value : ' + value);
+		this.log.debug("Create_state called for : " + stateName + " with value : " + value);
 
 		try {
 
-			// // Try to get details from state lib, if not use defaults. throw warning is states is not known in attribute list
+			// Try to get details from state lib, if not use defaults. throw warning is states is not known in attribute list
 			const common = {};
 			if (!stateAttr[name]) {
 				let warnMessage = `State attribute definition missing for : ${name}`;
@@ -464,7 +505,6 @@ class SwitchbotHub extends utils.Adapter {
 
 					// Send information to Sentry with value
 					warnMessage = `State attribute definition missing for : ${name} with value : ${value} `;
-					// this.sendSentry(warnMessage, null);
 					this.log.warn(warnMessage);
 				}
 			}
@@ -480,16 +520,15 @@ class SwitchbotHub extends utils.Adapter {
 			}
 			common.name = stateAttr[name] !== undefined ? stateAttr[name].name || name : name;
 			common.type = stateAttr[name] !== undefined ? stateAttr[name].type || typeof (value) : typeof (value);
-			common.role = stateAttr[name] !== undefined ? stateAttr[name].role || 'state' : 'state';
+			common.role = stateAttr[name] !== undefined ? stateAttr[name].role || "state" : "state";
 			common.read = true;
-			common.unit = stateAttr[name] !== undefined ? stateAttr[name].unit || '' : '';
+			common.unit = stateAttr[name] !== undefined ? stateAttr[name].unit || "" : "";
 			common.write = stateAttr[name] !== undefined ? stateAttr[name].write || false : false;
 
 			if ((!this.createdStatesDetails[stateName])
 				|| (this.createdStatesDetails[stateName]
 					&& (
 						common.name !== this.createdStatesDetails[stateName].name
-						|| common.name !== this.createdStatesDetails[stateName].name
 						|| common.type !== this.createdStatesDetails[stateName].type
 						|| common.role !== this.createdStatesDetails[stateName].role
 						|| common.read !== this.createdStatesDetails[stateName].read
@@ -501,41 +540,19 @@ class SwitchbotHub extends utils.Adapter {
 				this.log.debug(`An attribute has changed : ${stateName} | old ${this.createdStatesDetails[stateName]} | new ${JSON.stringify(common)}`);
 
 				await this.extendObjectAsync(stateName, {
-					type: 'state',
+					type: "state",
 					common
 				});
 
-			} else {
-				// console.log(`Nothing changed do not update object`);
 			}
 
-			// Set value to state including expiration time
+			// Set value to state
 			if (value !== null) {
 				await this.setStateChangedAsync(stateName, {
-					val: typeof value === 'object' ? JSON.stringify(value) : value, // real objects are not allowed
+					val: typeof value === "object" ? JSON.stringify(value) : value, // real objects are not allowed
 					ack: true,
 				});
 			}
-
-			// // Timer  to set online state to  FALSE when not updated during  2 time-sync intervals
-			// if (name === 'online') {
-			// 	// Clear running timer
-			// 	if (stateExpire[stateName]) {
-			// 		clearTimeout(stateExpire[stateName]);
-			// 		stateExpire[stateName] = null;
-			// 	}
-			//
-			// 	// timer
-			// 	stateExpire[stateName] = setTimeout(async () => {
-			// 		// Set value to state including expiration time
-			// 		await this.setState(stateName, {
-			// 			val: false,
-			// 			ack: true,
-			// 		});
-			// 		this.log.debug('Online state expired for ' + stateName);
-			// 	}, this.config.Time_Sync * 2000);
-			// 	this.log.debug('Expire time set for state : ' + name + ' with time in seconds : ' + this.config.Time_Sync * 2);
-			// }
 
 			// Store current object definition to memory
 			this.createdStatesDetails[stateName] = common;
@@ -544,8 +561,50 @@ class SwitchbotHub extends utils.Adapter {
 			common.write && this.subscribeStates(stateName);
 
 		} catch (error) {
-			this.sendSentry(`[stateSetCreate]`, `${error}`);
+			this.sendSentry("[stateSetCreate]", `${error}`);
 		}
+	}
+
+
+	/**
+	 * Convert ioBroker power values to a boolean.
+	 * Accepts boolean values and common string/number variants.
+	 *
+	 * @param {any} value
+	 * @returns {boolean}
+	 */
+	normalizePowerValue(value) {
+		if (typeof value === "boolean") return value;
+		if (typeof value === "number") return value === 1;
+
+		if (typeof value === "string") {
+			const normalized = value.trim().toLowerCase();
+			if (["true", "1", "on", "turnon"].includes(normalized)) return true;
+			if (["false", "0", "off", "turnoff"].includes(normalized)) return false;
+		}
+
+		return Boolean(value);
+	}
+
+
+	/**
+	 * Convert ioBroker switch values to a boolean.
+	 * Accepts boolean values and common string/number variants.
+	 *
+	 * @param {any} value
+	 * @returns {boolean}
+	 */
+	normalizeSwitchValue(value) {
+		if (typeof value === "boolean") return value;
+		if (typeof value === "number") return value === 1;
+
+		if (typeof value === "string") {
+			const normalized = value.trim().toLowerCase();
+			if (["true", "1", "on", "turnon"].includes(normalized)) return true;
+			if (["false", "0", "off", "turnoff"].includes(normalized)) return false;
+		}
+
+		return Boolean(value);
 	}
 
 	/**
@@ -558,100 +617,132 @@ class SwitchbotHub extends utils.Adapter {
 			if (state && state.ack === false) {
 
 				// Split state name in segments to be used later
-				const deviceArray = id.split('.');
+				const deviceArray = id.split(".");
 				const deviceId = deviceArray[2];
-				const deviceType = this.devices[deviceArray[2]].deviceType;
+
+				if (!this.devices[deviceId]) {
+					this.log.error(`Unknown device for state change: ${id}`);
+					return;
+				}
+
+				const deviceType = this.devices[deviceId].deviceType;
 
 				// Default configuration for SmartBot POST api
 				const apiURL = `/v1.1/devices/${deviceId}/commands`;
 				const apiData = {
-					'command': 'setAll',
-					'parameter': state.val,
-					'commandType': 'command'
+					command: "setAll",
+					parameter: state.val,
+					commandType: "command"
 				};
 
 				// Prepare data to submit API call
-				if (deviceType) { // State change regular device  detected
+				if (deviceType) { // State change regular device detected
 					switch (deviceType) {
 
-						case ('Bot'):
+						case "Bot":
 
-							if (deviceArray[3] === 'press') {
-								apiData.command = `press`;
-								apiData.parameter = `default`;
-							} else if (deviceArray[3] === 'state') {
+							if (deviceArray[3] === "press") {
+								apiData.command = "press";
+								apiData.parameter = "default";
+							} else if (deviceArray[3] === "state") {
 								if (state.val) {
-									apiData.command = `turnOn`;
-									apiData.parameter = `default`;
+									apiData.command = "turnOn";
+									apiData.parameter = "default";
 								} else {
-									apiData.command = `turnOff`;
-									apiData.parameter = `default`;
+									apiData.command = "turnOff";
+									apiData.parameter = "default";
 								}
 							}
 
 							break;
 
-						case ('Curtain'):
-							apiData.command = `setPosition`;
+
+						case "Relay Switch 1PM":
+						case "Relay Switch 1":
+							if (deviceArray[3] === "power") {
+								const switchOn = this.normalizeSwitchValue(state.val);
+								apiData.command = switchOn ? "turnOn" : "turnOff";
+								apiData.parameter = "default";
+							}
+							break;
+
+						case "Relay Switch 2PM":
+							if (deviceArray[3] === "switch1Status") {
+								const switchOn = this.normalizeSwitchValue(state.val);
+								apiData.command = switchOn ? "turnOn" : "turnOff";
+								apiData.parameter = "1";
+							} else if (deviceArray[3] === "switch2Status") {
+								const switchOn = this.normalizeSwitchValue(state.val);
+								apiData.command = switchOn ? "turnOn" : "turnOff";
+								apiData.parameter = "2";
+							} else if (deviceArray[3] === "power") {
+								const switchOn = this.normalizeSwitchValue(state.val);
+								apiData.command = switchOn ? "turnOn" : "turnOff";
+								apiData.parameter = "default";
+							}
+							break;
+
+						case "Curtain":
+							apiData.command = "setPosition";
 							apiData.parameter = `0,ff,${state.val}`;
 							break;
 
-						case ('Humidifier'):
-							//ToDo: add proper definitions and values
+						case "Humidifier":
+							// ToDo: add proper definitions and values
 							break;
 
-						case ('Plug'):
-							//ToDo: add proper definitions and values
+						case "Plug":
+							// ToDo: add proper definitions and values
 							break;
 
-						case ('Smart Fan'):
-							//ToDo: add proper definitions and values
+						case "Smart Fan":
+							// ToDo: add proper definitions and values
+							break;
+
+						case "Smart Lock":
+						case "Smart Lock Ultra":
+							if (deviceArray[3] === "lock") {
+								apiData.command = "lock";
+								apiData.parameter = "default";
+							}
 							break;
 
 						default:
 
 					}
-				} else { // State change of IR Remote  detected
-					apiData.parameter = `default`;
+				} else { // State change of IR Remote detected
+					apiData.parameter = "default";
 					switch (deviceArray[3]) {
 
-						case ('turnOn'):
-							apiData.command = `turnOn`;
+						case "turnOn":
+							apiData.command = "turnOn";
 							break;
 
-						case ('turnOff'):
-							apiData.command = `turnOff`;
+						case "turnOff":
+							apiData.command = "turnOff";
 							break;
 
 					}
 
-					if (deviceArray[3] === 'temperature'
-						|| deviceArray[3] === 'mode'
-						|| deviceArray[3] === 'fan_speed'
-						|| deviceArray[3] === 'power_state'
-					){
+					if (deviceArray[3] === "temperature"
+						|| deviceArray[3] === "mode"
+						|| deviceArray[3] === "fan_speed"
+						|| deviceArray[3] === "power_state"
+					) {
 						this.log.error(`Command ${deviceArray[3]} not (yet) implemented`);
 						return;
-						//ToDo: Define routine to have correct state values
-						// apiData.command = `setAll`;
-						// apiData.parameter = `{
-						// 	temperature : ${},
-						// 	mode : ${},
-						// 	fan speed : ${},
-						// 	power state : ${},
-						// }`
 					}
 				}
 
 				// Make API call
 				try {
 					this.log.debug(`[sendState] ${JSON.stringify(this.devices[deviceId])}: ${JSON.stringify(apiData)}`);
-					const apiResponse = await this.apiCall(`${apiURL}`, `${JSON.stringify(apiData)}`);
+					const apiResponse = await this.apiCall(apiURL, apiData);
 					this.log.debug(`[sendState apiResponse]: ${JSON.stringify(apiResponse)}`);
 
-					// Set ACK to true if API post  command successfully
+					// Set ACK to true if API post command successfully
 					if (apiResponse.statusCode === 100) {
-						this.setState(id, {ack: true});
+						this.setState(id, {val: state.val, ack: true});
 					} else {
 						this.log.error(`Unable to send command : ${apiResponse.message}`);
 					}
@@ -660,24 +751,23 @@ class SwitchbotHub extends utils.Adapter {
 				}
 			}
 		} catch (error) {
-			this.sendSentry(`[onStateChange]`, `${error}`);
+			this.sendSentry("[onStateChange]", `${error}`);
 		}
 	}
 
 	/**
 	 * Sentry error message handler
 	 * @param {string} msg Message to send
-	 * @param {object} error Error message (including stack) to handle exceptions
+	 * @param {object|string} error Error message to handle exceptions
 	 */
 	sendSentry(msg, error) {
 
-		let sentryMessage = msg; // If no (stack) error is provided just send the message
-		if (error) sentryMessage = `${msg} | Error : ${error} | StackTrace : ${error.stack}}`;
-
+		let sentryMessage = msg;
+		if (error) sentryMessage = `${msg} | Error : ${error}`;
 
 		if (!disableSentry) {
-			if (this.supportsFeature && this.supportsFeature('PLUGINS')) {
-				const sentryInstance = this.getPluginInstance('sentry');
+			if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
+				const sentryInstance = this.getPluginInstance("sentry");
 				if (sentryInstance) {
 					this.log.info(`[Error caught and sent to Sentry, thank you for collaborating!]  ${sentryMessage}`);
 					sentryInstance.getSentryObject().captureException(sentryMessage);
