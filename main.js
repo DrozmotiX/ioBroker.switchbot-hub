@@ -27,6 +27,7 @@ const intervallSettings = {
 	SmartFan: 30 * 60000,
 	SmartLock: 30 * 60000,
 	SmartLockUltra: 30 * 60000,
+	WaterDetector: 7 * 60000,
 };
 
 const API_REQUEST_TIMEOUT_MS = 15000;
@@ -73,6 +74,7 @@ class SwitchbotHub extends utils.Adapter {
 		intervallSettings.SmartFan = this.config.intervallSmartFan != null ? this.config.intervallSmartFan * 60000 || intervallSettings.SmartFan : intervallSettings.SmartFan;
 		intervallSettings.SmartLock = this.config.intervallSmartLock != null ? this.config.intervallSmartLock * 60000 || intervallSettings.SmartLock : intervallSettings.SmartLock;
 		intervallSettings.SmartLockUltra = this.config.intervallSmartLockUltra != null ? this.config.intervallSmartLockUltra * 60000 || intervallSettings.SmartLockUltra : intervallSettings.SmartLockUltra;
+		intervallSettings.WaterDetector = this.config.intervallWaterDetector != null ? this.config.intervallWaterDetector * 60000 || intervallSettings.WaterDetector : intervallSettings.WaterDetector;
 
 		// Request devices, create related objects and get all values
 		try {
@@ -162,6 +164,9 @@ class SwitchbotHub extends utils.Adapter {
 					break;
 				case "Smart Lock Ultra":
 					timeInMs = intervallSettings.SmartLockUltra;
+					break;
+				case "Water Detector":
+					timeInMs = intervallSettings.WaterDetector;
 					break;
 				default:
 					timeInMs = intervallSettings.all;
