@@ -10,6 +10,7 @@
     "Refresh Plug values": "Обновить значения Plug",
     "Refresh Smart Fan values": "Обновить значения Smart Fan",
     "Refresh all devices and values": "Обновить все устройства и значения",
+    "Secret Key": "Секретный ключ",
     "number": "количество",
     "switchbot-hub adapter settings": "Настройки адаптера для Switchbot-Hub"
 }

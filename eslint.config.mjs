@@ -9,7 +9,6 @@ export default [
     ignores: [
       ".dev-server/**",
       ".devcontainer/**",
-      "admin/words.js",
       // Generated / vendored type declaration files (adapter config typing, legacy admin typing)
       "**/*.d.ts",
     ],

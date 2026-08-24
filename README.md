@@ -18,6 +18,9 @@ This adapter allows you to control your all devices connected to your SwitchBot 
 <span style="color:red">**** Beta status at 0.1.x, only install for development/testing purposes !
 </span>
 
+## Sentry
+**This adapter uses Sentry libraries to automatically report exceptions and code errors to the developers.** For more details and for information how to disable the error reporting see [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)! Sentry reporting is used starting with js-controller 3.0.
+
 ## Getting Started
 Please follow these  steps to get your Open Token!
 1. Download the SwitchBot app on App Store or Google Play Store
@@ -92,23 +95,19 @@ Virtual infrared remote devices refer to virtual devices that are used to simula
 | Vacuum Cleaner | No | No | No |
 | Others | No | No | No |
 
-## Changelog
-<!--
-	Placeholder for the next version (at the beginning of the line):
-	### __WORK IN PROGRESS__
--->
-
 ## Support me
 If you like my work, please feel free to provide a personal donation  
 (this is a personal Donate link for DutchmanNL, no relation to the ioBroker Project !)  
 [![Donate](https://raw.githubusercontent.com/DrozmotiX/ioBroker.switchbot-hub/main/admin/button.png)](http://paypal.me/DutchmanNL)
 
-
+## Changelog
+<!--
+	Placeholder for the next version (at the beginning of the line):
+	### __WORK IN PROGRESS__
+-->
 ### __WORK IN PROGRESS__
+* (arteck) api V1.1
 * (DutchmanNL) Maintenance: raise Node.js to 22, modernise CI and release tooling, update dependencies, resolve repository checker findings
-
-### coming soon
-* (arteck) api V1.1 
 
 ### 0.1.2 (2021-09-03)
 * (Dutchman) Sentry error reporting implemented

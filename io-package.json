@@ -13,7 +13,8 @@
                 "it": "Segnalazione errori sentinella implementata",
                 "es": "Informe de errores de centinela implementado",
                 "pl": "Wdrożono raportowanie błędów Sentry",
-                "zh-cn": "哨兵错误报告实施"
+                "zh-cn": "哨兵错误报告实施",
+                "uk": "Реалізовано звітування про помилки через Sentry"
             },
             "0.1.0": {
                 "en": "* Initial alpha release, Physical devices implemented\n* Only curtains and SwitchBots can be controlled currently\n\n## License\nMIT License\n\nCopyright (c) 2021 DutchmanNL <oss@drozmotix.eu>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.",
@@ -25,7 +26,8 @@
                 "it": "* Versione alpha iniziale, dispositivi fisici implementati\n* Al momento è possibile controllare solo tende e SwitchBot\n\n## Licenza\nLicenza MIT\n\nCopyright (c) 2021 DutchmanNL <oss@drozmotix.eu>\n\nL'autorizzazione è concessa, a titolo gratuito, a chiunque ne ottenga una copia\ndi questo software e dei file di documentazione associati (il \"Software\"), per trattare\nnel Software senza restrizioni, inclusi senza limitazione i diritti\nutilizzare, copiare, modificare, unire, pubblicare, distribuire, concedere in sublicenza e/o vendere\ncopie del Software e per consentire alle persone a cui il Software è\narredato a tal fine, alle seguenti condizioni:\n\nL'avviso di copyright di cui sopra e questo avviso di autorizzazione devono essere inclusi in tutto\ncopie o parti sostanziali del Software.\n\nIL SOFTWARE VIENE FORNITO \"COS COM'È\", SENZA GARANZIE DI ALCUN TIPO, ESPRESSE O\nIMPLICITA, COMPRESE MA NON LIMITATE ALLE GARANZIE DI COMMERCIABILITÀ,\nIDONEITÀ A UNO SCOPO PARTICOLARE E NON VIOLAZIONE. IN NESSUN CASO IL\nGLI AUTORI O I TITOLARI DEL COPYRIGHT SARANNO RESPONSABILI PER QUALSIASI RECLAMO, DANNI O ALTRO\nRESPONSABILITÀ, SIA IN AZIONE CONTRATTUALE, ILLECITO O ALTRO, DERIVANTE DA,\nFUORI O IN CONNESSIONE CON IL SOFTWARE O L'UTILIZZO O ALTRI TRATTAMENTI IN\nSOFTWARE.",
                 "es": "* Versión alfa inicial, dispositivos físicos implementados\n* Actualmente solo se pueden controlar cortinas y SwitchBots\n\n## Licencia\nLicencia MIT\n\nCopyright (c) 2021 DutchmanNL <oss@drozmotix.eu>\n\nPor la presente se otorga permiso, sin cargo, a cualquier persona que obtenga una copia.\nde este software y los archivos de documentación asociados (el \"Software\"), para tratar\nen el Software sin restricción, incluidos, entre otros, los derechos\npara usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y / o vender\ncopias del Software, y para permitir a las personas a las que el Software es\namueblado para ello, sujeto a las siguientes condiciones:\n\nEl aviso de copyright anterior y este aviso de permiso se incluirán en todos\ncopias o partes sustanciales del Software.\n\nEL SOFTWARE SE PROPORCIONA \"TAL CUAL\", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O\nIMPLÍCITAS, INCLUIDAS PERO NO LIMITADAS A LAS GARANTÍAS DE COMERCIABILIDAD,\nAPTITUD PARA UN PROPÓSITO PARTICULAR Y NO INFRACCIÓN. EN NINGÚN CASO\nLOS AUTORES O TITULARES DE LOS DERECHOS DE AUTOR SERÁN RESPONSABLES DE CUALQUIER RECLAMO, DAÑOS U OTROS\nRESPONSABILIDAD, YA SEA EN UNA ACCIÓN DE CONTRATO, AGRAVIO O DE OTRO MODO, QUE SURJA DE,\nFUERA O EN RELACIÓN CON EL SOFTWARE O EL USO U OTROS NEGOCIOS EN EL\nSOFTWARE.",
                 "pl": "* Wstępne wydanie alfa, zaimplementowane urządzenia fizyczne\n* Obecnie można sterować tylko zasłonami i SwitchBots\n\n## Licencja\nLicencja MIT\n\nPrawa autorskie (c) 2021 DutchmanNL <oss@drozmotix.eu>\n\nNiniejszym udziela się nieodpłatnego zezwolenia każdej osobie otrzymującej kopię\ntego oprogramowania i związanych z nim plików dokumentacji („Oprogramowanie”), aby handlować\nw Oprogramowaniu bez ograniczeń, w tym bez ograniczeń praw\nużywać, kopiować, modyfikować, łączyć, publikować, rozpowszechniać, udzielać sublicencji i/lub sprzedawać\nkopie Oprogramowania oraz do zezwolenia osobom, dla których Oprogramowanie jest\nw tym celu, z zastrzeżeniem następujących warunków:\n\nPowyższa informacja o prawach autorskich i niniejsza informacja o pozwoleniu będą zawarte we wszystkich\nkopie lub istotne części Oprogramowania.\n\nOPROGRAMOWANIE JEST DOSTARCZANE „TAK JAK JEST”, BEZ JAKICHKOLWIEK GWARANCJI, WYRAŹNYCH LUB\nDOROZUMIANYCH, W TYM MIĘDZY INNYMI GWARANCJE WARTOŚCI HANDLOWEJ,\nPRZYDATNOŚĆ DO OKREŚLONEGO CELU I NIENARUSZALNOŚCI. W ŻADNYM WYPADKU NIE\nAUTORZY LUB POSIADACZE PRAW AUTORSKICH PONOSZĄ ODPOWIEDZIALNOŚĆ ZA WSZELKIE ROSZCZENIA, SZKODY LUB INNE\nODPOWIEDZIALNOŚĆ UMOWNA, CZYNNA LUB W INNY SPOSÓB, WYNIKAJĄCA Z,\nNIE ZWIĄZANE Z OPROGRAMOWANIEM LUB KORZYSTANIEM LUB INNYMI CZYNNOŚCIAMI W\nOPROGRAMOWANIE.",
-                "zh-cn": "* 初始 alpha 版本，已实现物理设备\n* 目前只能控制窗帘和SwitchBots\n\n＃＃ 执照\n麻省理工学院执照\n\n版权所有 (c) 2021 DutchmanNL <oss@drozmotix.eu>\n\n特此向任何获得副本的人免费授予许可\n本软件和相关文档文件（“软件”），以处理\n在软件中不受限制，包括但不限于权利\n使用、复制、修改、合并、发布、分发、再许可和/或出售\n软件的副本，并允许软件的接收者\n提供这样做，但须符合以下条件：\n\n以上版权声明和本许可声明应包含在所有\n软件的副本或重要部分。\n\n该软件“按原样”提供，不提供任何形式的明示或保证\n暗示，包括但不限于适销性保证，\n适用于特定目的且不侵权。在任何情况下都不得\n作者或版权持有人应对任何索赔、损害或其他\n责任，无论是在合同诉讼、侵权行为或其他方面，由以下原因引起的，\n与本软件或本软件中的使用或其他交易无关或与之相关\n软件。"
+                "zh-cn": "* 初始 alpha 版本，已实现物理设备\n* 目前只能控制窗帘和SwitchBots\n\n＃＃ 执照\n麻省理工学院执照\n\n版权所有 (c) 2021 DutchmanNL <oss@drozmotix.eu>\n\n特此向任何获得副本的人免费授予许可\n本软件和相关文档文件（“软件”），以处理\n在软件中不受限制，包括但不限于权利\n使用、复制、修改、合并、发布、分发、再许可和/或出售\n软件的副本，并允许软件的接收者\n提供这样做，但须符合以下条件：\n\n以上版权声明和本许可声明应包含在所有\n软件的副本或重要部分。\n\n该软件“按原样”提供，不提供任何形式的明示或保证\n暗示，包括但不限于适销性保证，\n适用于特定目的且不侵权。在任何情况下都不得\n作者或版权持有人应对任何索赔、损害或其他\n责任，无论是在合同诉讼、侵权行为或其他方面，由以下原因引起的，\n与本软件或本软件中的使用或其他交易无关或与之相关\n软件。",
+                "uk": "* Перший альфа-реліз, реалізовано фізичні пристрої\n* Наразі можна керувати лише шторами та SwitchBot"
             }
         },
         "titleLang": {
@@ -38,7 +40,8 @@
             "it": "SwitchBot-Hub",
             "es": "SwitchBot-Hub",
             "pl": "SwitchBot-Hub",
-            "zh-cn": "SwitchBot-Hub"
+            "zh-cn": "SwitchBot-Hub",
+            "uk": "SwitchBot-Hub"
         },
         "desc": {
             "en": "This adapter allows you to control your all devices connected to you SwitchBot hub by cloud API",
@@ -50,7 +53,8 @@
             "it": "Questo adattatore ti consente di controllare tutti i dispositivi collegati all'hub SwitchBot tramite API cloud",
             "es": "Este adaptador le permite controlar todos sus dispositivos conectados a su concentrador SwitchBot mediante API en la nube",
             "pl": "Ten adapter umożliwia sterowanie wszystkimi urządzeniami podłączonymi do koncentratora SwitchBot przez API w chmurze",
-            "zh-cn": "此适配器允许您通过云 API 控制连接到 SwitchBot 集线器的所有设备"
+            "zh-cn": "此适配器允许您通过云 API 控制连接到 SwitchBot 集线器的所有设备",
+            "uk": "Цей адаптер дозволяє керувати всіма пристроями, підключеними до вашого хаба SwitchBot, через хмарний API"
         },
         "authors": [
             "DutchmanNL <oss@drozmotix.eu>"
@@ -78,7 +82,7 @@
         },
         "dependencies": [
             {
-                "js-controller": ">=5.0.19"
+                "js-controller": ">=6.0.11"
             }
         ],
         "adminUI": {
@@ -91,12 +95,13 @@
         "tier": 3,
         "globalDependencies": [
             {
-                "admin": ">=7.4.10"
+                "admin": ">=7.6.20"
             }
         ]
     },
     "encryptedNative": [
-        "openToken"
+        "openToken",
+        "secretKey"
     ],
     "native": {
         "openToken": "",
@@ -105,7 +110,8 @@
         "intervallHumidifier": 7,
         "intervallMeter": 7,
         "intervallPlug": 30,
-        "intervallSmartFan": 30
+        "intervallSmartFan": 30,
+        "secretKey": ""
     },
     "objects": [],
     "instanceObjects": [
@@ -132,6 +138,7 @@
         }
     ],
     "protectedNative": [
-        "openToken"
+        "openToken",
+        "secretKey"
     ]
 }

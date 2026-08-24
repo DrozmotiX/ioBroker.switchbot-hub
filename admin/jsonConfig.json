@@ -44,7 +44,7 @@
     },
     "intervallAll": {
       "newLine": true,
-      "sm": 3,
+      "sm": 6,
       "type": "number",
       "label": "Refresh all devices and values",
       "min": 1,
@@ -57,7 +57,7 @@
     },
     "intervallHumidifier": {
       "newLine": true,
-      "sm": 3,
+      "sm": 6,
       "type": "number",
       "label": "Refresh Humidifier values",
       "min": 1,
@@ -69,7 +69,7 @@
       "xl": 2
     },
     "intervallMeter": {
-      "sm": 3,
+      "sm": 6,
       "type": "number",
       "label": "Refresh Meter values",
       "min": 1,
@@ -82,7 +82,7 @@
     },
     "intervallCurtain": {
       "newLine": true,
-      "sm": 3,
+      "sm": 6,
       "type": "number",
       "label": "Refresh Curtain values",
       "min": 1,
@@ -94,7 +94,7 @@
       "xl": 2
     },
     "intervallPlug": {
-      "sm": 3,
+      "sm": 6,
       "type": "number",
       "label": "Refresh Plug values",
       "min": 1,
@@ -106,7 +106,7 @@
       "xl": 2
     },
     "intervallSmartFan": {
-      "sm": 3,
+      "sm": 6,
       "type": "number",
       "label": "Refresh Smart Fan values",
       "min": 1,

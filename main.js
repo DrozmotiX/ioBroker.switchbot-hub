@@ -9,9 +9,9 @@
 const utils = require("@iobroker/adapter-core");
 const stateAttr = require(`${__dirname}/lib/state_attr.js`); // Load attribute library
 const irDeviceButtons = require(`${__dirname}/lib/irRemoteDevices.js`); // Load irRemote Button definitions
-const crypto = require("crypto");
-const https = require("https");
-const { TextDecoder } = require("util");
+const crypto = require("node:crypto");
+const https = require("node:https");
+const { TextDecoder } = require("node:util");
 
 const disableSentry = false; // Ensure to set to true during development !
 
@@ -111,10 +111,10 @@ class SwitchbotHub extends utils.Adapter {
 
     // Reset timer (if running) and start new one for next watchdog interval
     if (dataRefreshTimer[deviceId]) {
-      clearTimeout(dataRefreshTimer[deviceId]);
+      this.clearTimeout(dataRefreshTimer[deviceId]);
       dataRefreshTimer[deviceId] = null;
     }
-    dataRefreshTimer[deviceId] = setTimeout(async () => {
+    dataRefreshTimer[deviceId] = this.setTimeout(async () => {
       if (deviceId !== "all") {
         // Only refresh values of device
 
@@ -171,7 +171,7 @@ class SwitchbotHub extends utils.Adapter {
     try {
       for (const device in dataRefreshTimer) {
         if (dataRefreshTimer[device]) {
-          clearTimeout(dataRefreshTimer[device]);
+          this.clearTimeout(dataRefreshTimer[device]);
           delete dataRefreshTimer[device];
         }
       }
@@ -591,12 +591,12 @@ class SwitchbotHub extends utils.Adapter {
       // if (name === 'online') {
       // 	// Clear running timer
       // 	if (stateExpire[stateName]) {
-      // 		clearTimeout(stateExpire[stateName]);
+      // 		this.clearTimeout(stateExpire[stateName]);
       // 		stateExpire[stateName] = null;
       // 	}
       //
       // 	// timer
-      // 	stateExpire[stateName] = setTimeout(async () => {
+      // 	stateExpire[stateName] = this.setTimeout(async () => {
       // 		// Set value to state including expiration time
       // 		await this.setState(stateName, {
       // 			val: false,
