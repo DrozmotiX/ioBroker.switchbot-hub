@@ -95,7 +95,7 @@ Virtual infrared remote devices refer to virtual devices that are used to simula
 ## Changelog
 <!--
 	Placeholder for the next version (at the beginning of the line):
-	### **WORK IN PROGRESS**
+	### __WORK IN PROGRESS__
 -->
 
 ## Support me
@@ -103,6 +103,9 @@ If you like my work, please feel free to provide a personal donation
 (this is a personal Donate link for DutchmanNL, no relation to the ioBroker Project !)  
 [![Donate](https://raw.githubusercontent.com/DrozmotiX/ioBroker.switchbot-hub/main/admin/button.png)](http://paypal.me/DutchmanNL)
 
+
+### __WORK IN PROGRESS__
+* (DutchmanNL) Maintenance: raise Node.js to 22, modernise CI and release tooling, update dependencies, resolve repository checker findings
 
 ### coming soon
 * (arteck) api V1.1 
