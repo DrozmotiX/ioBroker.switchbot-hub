@@ -400,15 +400,31 @@ class SwitchbotHub extends utils.Adapter {
 			// Write status data of device to states
 			for (const statusState in devicesValues) {
 				let statusValue = devicesValues[statusState];
+				const deviceType = this.devices[deviceId] && this.devices[deviceId].deviceType;
 
 				// Relay Switch power is returned by SwitchBot as "on"/"off".
 				// ioBroker switch states should be boolean so the Objects UI can toggle properly.
 				if (
 					statusState === "power"
-					&& this.devices[deviceId]
-					&& ["Relay Switch 1PM", "Relay Switch 1", "Relay Switch 2PM"].includes(this.devices[deviceId].deviceType)
+					&& ["Relay Switch 1PM", "Relay Switch 1", "Relay Switch 2PM"].includes(deviceType)
 				) {
 					statusValue = this.normalizePowerValue(statusValue);
+				}
+
+				// Bot devices report their real current state via "power"
+				// ("on"/"off") - this reflects manual presses on the physical
+				// device itself, not just commands sent from ioBroker. The
+				// actual control/display state for a Bot is ".state" (created
+				// in loadDevices() as "ON/OFF", written from onStateChange()
+				// on turnOn/turnOff). Without this redirect, "power" would end
+				// up in its own, nowhere-wired ".power" state and ".state"
+				// would only ever reflect the last command sent from
+				// ioBroker, never a manual press on the Bot itself.
+				if (statusState === "power" && deviceType === "Bot") {
+					const boolValue = this.normalizePowerValue(statusValue);
+					await this.stateSetCreate(`${deviceId}.state`, "ON/OFF", boolValue);
+					this.devices[deviceId].states.state = boolValue;
+					continue;
 				}
 
 				if (statusState === "switch1Status" || statusState === "switch2Status" || statusState === "switchStatus") {
