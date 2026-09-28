@@ -62,6 +62,11 @@ class SwitchbotHub extends utils.Adapter {
 		// Reset the connection indicator during startup
 		this.setState("info.connection", false, true);
 
+		// Global manual-refresh trigger (see onStateChange()) - not created
+		// via stateSetCreate() like the per-device states, so it needs its
+		// own explicit subscription.
+		this.subscribeStates("info.refresh");
+
 		// Check if token is provided
 		if (!this.config.openToken) {
 			this.log.error("*** No token provided, Please enter your token in adapter settings !!!  ***");
@@ -647,6 +652,23 @@ class SwitchbotHub extends utils.Adapter {
 				// Split state name in segments to be used later
 				const deviceArray = id.split(".");
 				const deviceId = deviceArray[2];
+
+				// Global refresh trigger (info.refresh): force an immediate
+				// re-poll of all devices instead of waiting for the next
+				// scheduled interval (up to 60 minutes for "all", or the
+				// per-device-type interval). Useful e.g. after manually/
+				// physically changing a device, to resync ioBroker right
+				// away instead of waiting.
+				if (deviceId === "info" && deviceArray[3] === "refresh") {
+					this.log.info("Manual refresh requested - reloading all devices now.");
+					this.setState(id, false, true);
+					try {
+						await this.loadDevices();
+					} catch (error) {
+						this.sendSentry("[manual refresh]", `${error}`);
+					}
+					return;
+				}
 
 				if (!this.devices[deviceId]) {
 					this.log.error(`Unknown device for state change: ${id}`);

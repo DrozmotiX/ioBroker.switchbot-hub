@@ -136,6 +136,19 @@
                 "def": false
             },
             "native": {}
+        },
+        {
+            "_id": "info.refresh",
+            "type": "state",
+            "common": {
+                "role": "button",
+                "name": "Request an immediate refresh of all device states instead of waiting for the next poll interval",
+                "type": "boolean",
+                "read": true,
+                "write": true,
+                "def": false
+            },
+            "native": {}
         }
     ]
 }
