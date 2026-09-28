@@ -92,6 +92,22 @@
       "min" : 1,
       "max" : 1380,
       "step": 1
+    },
+    "intervallRelay": {
+      "sm": 3,
+      "type": "number",
+      "label": "Refresh Relay Switch values",
+      "min" : 1,
+      "max" : 1380,
+      "step": 1
+    },
+    "intervallBot": {
+      "sm": 3,
+      "type": "number",
+      "label": "Refresh Bot values",
+      "min" : 1,
+      "max" : 1380,
+      "step": 1
     }
   }
 }

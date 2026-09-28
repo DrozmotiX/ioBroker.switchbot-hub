@@ -28,6 +28,8 @@ const intervallSettings = {
 	SmartLock: 30 * 60000,
 	SmartLockUltra: 30 * 60000,
 	WaterDetector: 7 * 60000,
+	Relay: 7 * 60000,
+	Bot: 7 * 60000,
 };
 
 const API_REQUEST_TIMEOUT_MS = 15000;
@@ -75,6 +77,8 @@ class SwitchbotHub extends utils.Adapter {
 		intervallSettings.SmartLock = this.config.intervallSmartLock != null ? this.config.intervallSmartLock * 60000 || intervallSettings.SmartLock : intervallSettings.SmartLock;
 		intervallSettings.SmartLockUltra = this.config.intervallSmartLockUltra != null ? this.config.intervallSmartLockUltra * 60000 || intervallSettings.SmartLockUltra : intervallSettings.SmartLockUltra;
 		intervallSettings.WaterDetector = this.config.intervallWaterDetector != null ? this.config.intervallWaterDetector * 60000 || intervallSettings.WaterDetector : intervallSettings.WaterDetector;
+		intervallSettings.Relay = this.config.intervallRelay != null ? this.config.intervallRelay * 60000 || intervallSettings.Relay : intervallSettings.Relay;
+		intervallSettings.Bot = this.config.intervallBot != null ? this.config.intervallBot * 60000 || intervallSettings.Bot : intervallSettings.Bot;
 
 		// Request devices, create related objects and get all values
 		try {
@@ -167,6 +171,14 @@ class SwitchbotHub extends utils.Adapter {
 					break;
 				case "Water Detector":
 					timeInMs = intervallSettings.WaterDetector;
+					break;
+				case "Relay Switch 1PM":
+				case "Relay Switch 1":
+				case "Relay Switch 2PM":
+					timeInMs = intervallSettings.Relay;
+					break;
+				case "Bot":
+					timeInMs = intervallSettings.Bot;
 					break;
 				default:
 					timeInMs = intervallSettings.all;
