@@ -419,13 +419,34 @@ class SwitchbotHub extends utils.Adapter {
 				let statusValue = devicesValues[statusState];
 				const deviceType = this.devices[deviceId] && this.devices[deviceId].deviceType;
 
-				// Relay Switch power is returned by SwitchBot as "on"/"off".
-				// ioBroker switch states should be boolean so the Objects UI can toggle properly.
+				// Relay Switch 2PM channels use "switch1Status"/"switch2Status" for
+				// on/off and "switch1Power"/"switch2Power" for wattage - no bare
+				// "power" field, so nothing to normalize here for that type.
 				if (
 					statusState === "power"
-					&& ["Relay Switch 1PM", "Relay Switch 1", "Relay Switch 2PM"].includes(deviceType)
+					&& deviceType === "Relay Switch 2PM"
 				) {
 					statusValue = this.normalizePowerValue(statusValue);
+				}
+
+				// Relay Switch 1PM/1 report ACTUAL POWER DRAW IN WATT under the
+				// field name "power" - unlike every other device type, this is NOT
+				// an on/off indicator despite the name (confirmed live:
+				// switchStatus:1 i.e. genuinely on, power:26.6 i.e. 26.6 Watt
+				// draw). The previous code applied normalizePowerValue() to this
+				// wattage number, which only returns true for exactly 1 (=1 Watt) -
+				// in practice this silently corrupted the ".power" control/display
+				// state back to false on every single poll, even right after a
+				// correct manual/app toggle (root cause of "Status ändert sich
+				// nicht"/"kann nicht mehr schalten"). The real on/off state for
+				// these devices is "switchStatus" instead (handled below, mirrored
+				// into ".power"). Keep the wattage reading under its own state
+				// instead of discarding it.
+				if (statusState === "power" && ["Relay Switch 1PM", "Relay Switch 1"].includes(deviceType)) {
+					const watt = Number(statusValue) || 0;
+					await this.stateSetCreate(`${deviceId}.powerWatt`, "powerWatt", watt);
+					this.devices[deviceId].states.powerWatt = watt;
+					continue;
 				}
 
 				// Bot devices report their real current state via "power"
@@ -446,6 +467,15 @@ class SwitchbotHub extends utils.Adapter {
 
 				if (statusState === "switch1Status" || statusState === "switch2Status" || statusState === "switchStatus") {
 					statusValue = this.normalizeSwitchValue(statusValue);
+
+					// Relay Switch 1PM/1: "switchStatus" is the real on/off state -
+					// mirror it into ".power" too, the actual control/display state
+					// used by onStateChange()/Lovelace (see redirect above, which
+					// stopped the wattage reading from corrupting ".power").
+					if (statusState === "switchStatus" && ["Relay Switch 1PM", "Relay Switch 1"].includes(deviceType)) {
+						await this.stateSetCreate(`${deviceId}.power`, "power", statusValue);
+						this.devices[deviceId].states.power = statusValue;
+					}
 				}
 
 				await this.stateSetCreate(`${deviceId}.${statusState}`, statusState, statusValue);
