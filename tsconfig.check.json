@@ -1,7 +1,13 @@
 // Specialized tsconfig for type-checking js files
 {
 	"extends": "./tsconfig.json",
-	"compilerOptions": {},
+	"compilerOptions": {
+		// @tsconfig/node22 limits "types" to node only; the test files need the mocha globals
+		"types": [
+			"node",
+			"mocha"
+		]
+	},
 	"include": [
 		"**/*.js",
 		"**/*.d.ts"

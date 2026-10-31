@@ -8,6 +8,9 @@ nbproject
 # npm package files
 iobroker.*.tgz
 
+# release-script commit information
+.commitinfo
+
 # ioBroker dev-server
 .dev-server/
 

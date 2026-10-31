@@ -1,0 +1,16 @@
+{
+    "Admin < 5 not supported, please update to use this adapter.": "Admin < 5 не підтримується, будь ласка, оновіть його, щоб використовувати цей адаптер.",
+    "Choose your preferred refresh intervall times in minutes, please note the API limit ! (See Readme)": "Виберіть бажані інтервали оновлення у хвилинах, зверніть увагу на обмеження API! (див. Readme)",
+    "Generate an Open Token within the app": "Згенеруйте Open Token у застосунку",
+    "Please provide your token": "Будь ласка, вкажіть ваш токен",
+    "Please use the Switchbot App to get your token, got to settings and tap 10 times on app version to generate it!": "Скористайтеся застосунком SwitchBot, щоб отримати токен: перейдіть у налаштування та натисніть 10 разів на версію застосунку, щоб згенерувати його!",
+    "Refresh Curtain values": "Оновлювати значення штор",
+    "Refresh Humidifier values": "Оновлювати значення зволожувача",
+    "Refresh Meter values": "Оновлювати значення метеодатчика",
+    "Refresh Plug values": "Оновлювати значення розетки",
+    "Refresh Smart Fan values": "Оновлювати значення розумного вентилятора",
+    "Refresh all devices and values": "Оновлювати всі пристрої та значення",
+    "Secret Key": "Секретний ключ",
+    "number": "число",
+    "switchbot-hub adapter settings": "Налаштування адаптера Switchbot-Hub"
+}
